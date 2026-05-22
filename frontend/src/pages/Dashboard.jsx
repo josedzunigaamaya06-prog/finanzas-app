@@ -1,0 +1,338 @@
+import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { dashboardAPI } from '../services/api';
+import { formatCurrency, formatPercent, formatDate, priorityColor, priorityLabel } from '../utils/formatters';
+import Card from '../components/ui/Card';
+import Badge from '../components/ui/Badge';
+import MonthlyChart from '../components/charts/MonthlyChart';
+import CategoryChart from '../components/charts/CategoryChart';
+import CashFlowChart from '../components/charts/CashFlowChart';
+import LoadingSpinner from '../components/ui/LoadingSpinner';
+import useAuthStore from '../store/authStore';
+
+const gradeColors = {
+  A: 'text-emerald-400', B: 'text-blue-400',
+  C: 'text-amber-400',   D: 'text-orange-400', F: 'text-red-400',
+};
+
+const StatCard = ({ label, value, sub, icon, color = 'default', trend }) => {
+  const bg = {
+    default: 'bg-slate-100 dark:bg-slate-700/50 text-slate-500',
+    green:   'bg-emerald-500/10 text-emerald-500',
+    red:     'bg-red-500/10 text-red-500',
+    blue:    'bg-primary-500/10 text-primary-500',
+    amber:   'bg-amber-500/10 text-amber-500',
+  };
+  return (
+    <Card className="flex items-start gap-3 p-4">
+      <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-lg flex-shrink-0 ${bg[color]}`}>
+        {icon}
+      </div>
+      <div className="min-w-0 flex-1">
+        <p className="text-xs text-slate-400 mb-0.5 truncate">{label}</p>
+        <p className="text-lg md:text-xl font-bold text-slate-900 dark:text-white truncate">{value}</p>
+        {sub && (
+          <p className={`text-xs mt-0.5 truncate ${
+            trend === 'up' ? 'text-emerald-500' : trend === 'down' ? 'text-red-500' : 'text-slate-400'
+          }`}>{sub}</p>
+        )}
+      </div>
+    </Card>
+  );
+};
+
+export default function Dashboard() {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const { user } = useAuthStore();
+
+  useEffect(() => {
+    dashboardAPI.get()
+      .then((r) => setData(r.data))
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) return <div className="flex justify-center py-20"><LoadingSpinner size="lg" /></div>;
+  if (!data) return null;
+
+  const { monthly, trend, expensesByCategory, debtSummary, financialScore, recentTransactions, recommendations, paymentMethodStats, walletSummary } = data;
+
+  return (
+    <div className="space-y-4 md:space-y-6 animate-fade-in">
+
+      {/* Bienvenida + Score */}
+      <div className="flex items-center justify-between gap-3">
+        <div className="min-w-0">
+          <h2 className="text-lg md:text-xl font-bold text-slate-900 dark:text-white">
+            Hola, {user?.name?.split(' ')[0]} 👋
+          </h2>
+          <p className="text-xs md:text-sm text-slate-400">Resumen de este mes</p>
+        </div>
+        <div className="flex items-center gap-3 bg-white dark:bg-dark-800 border border-slate-100 dark:border-slate-700/50 rounded-2xl px-3 py-2 md:px-4 md:py-3 flex-shrink-0">
+          <div className="text-center">
+            <p className={`text-2xl md:text-3xl font-black ${gradeColors[financialScore?.grade] || 'text-slate-400'}`}>
+              {financialScore?.grade || '-'}
+            </p>
+            <p className="text-xs text-slate-400">Score</p>
+          </div>
+          <div className="w-px h-7 bg-slate-200 dark:bg-slate-700" />
+          <div className="text-center">
+            <p className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white">
+              {financialScore?.score || 0}
+            </p>
+            <p className="text-xs text-slate-400">/ 100</p>
+          </div>
+        </div>
+      </div>
+
+      {/* KPI Cards — 2 columnas en móvil, 4 en desktop */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+        <StatCard
+          label="Ingresos del mes"
+          value={formatCurrency(monthly.totalIncome, user?.currency)}
+          icon="↑" color="green"
+          sub={`${monthly.incomeCount} registros`}
+        />
+        <StatCard
+          label="Gastos del mes"
+          value={formatCurrency(monthly.totalExpenses, user?.currency)}
+          icon="↓" color="red"
+          sub={`${monthly.expenseCount} registros`}
+        />
+        <StatCard
+          label="Ahorro neto"
+          value={formatCurrency(monthly.netSavings, user?.currency)}
+          icon="💰"
+          color={monthly.netSavings >= 0 ? 'blue' : 'red'}
+          sub={`Tasa: ${formatPercent(monthly.savingsRate)}`}
+          trend={monthly.netSavings >= 0 ? 'up' : 'down'}
+        />
+        <StatCard
+          label="Total deudas"
+          value={formatCurrency(debtSummary.totalBalance, user?.currency)}
+          icon="🏦" color="amber"
+          sub={`${debtSummary.count} activas`}
+        />
+      </div>
+
+      {/* Billeteras + Equilibrio de pago */}
+      {(walletSummary || paymentMethodStats) && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+          {/* Widget: Billeteras */}
+          {walletSummary && (
+            <Card className="p-4 md:p-5">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-sm md:text-base font-semibold text-slate-900 dark:text-white">💰 Mis billeteras</h3>
+                <Link to="/wallets" className="text-xs text-primary-400 hover:text-primary-300">Ver todo →</Link>
+              </div>
+              <div className="flex gap-3 mb-3">
+                <div className="flex-1 p-2.5 rounded-xl bg-primary-500/10 text-center">
+                  <p className="text-xs text-slate-400 mb-0.5">Digital</p>
+                  <p className="text-sm font-bold text-primary-400 truncate">{formatCurrency(walletSummary.totalDigital, user?.currency)}</p>
+                </div>
+                <div className="flex-1 p-2.5 rounded-xl bg-emerald-500/10 text-center">
+                  <p className="text-xs text-slate-400 mb-0.5">Efectivo</p>
+                  <p className="text-sm font-bold text-emerald-400 truncate">{formatCurrency(walletSummary.totalCash, user?.currency)}</p>
+                </div>
+              </div>
+              <div className="space-y-1.5 max-h-36 overflow-y-auto">
+                {(walletSummary.wallets || []).map((w) => (
+                  <div key={w.id} className="flex items-center justify-between gap-2 py-1">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="text-base flex-shrink-0">{w.icon || '💳'}</span>
+                      <p className="text-xs text-slate-600 dark:text-slate-300 truncate">{w.name}</p>
+                    </div>
+                    <p className="text-xs font-semibold text-slate-900 dark:text-white flex-shrink-0">
+                      {formatCurrency(w.balance, user?.currency)}
+                    </p>
+                  </div>
+                ))}
+              </div>
+              <div className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-700/30 flex justify-between">
+                <span className="text-xs text-slate-400">Total disponible</span>
+                <span className="text-sm font-bold text-slate-900 dark:text-white">{formatCurrency(walletSummary.totalOverall, user?.currency)}</span>
+              </div>
+            </Card>
+          )}
+
+          {/* Widget: Equilibrio digital vs efectivo */}
+          {paymentMethodStats && (
+            <Card className="p-4 md:p-5">
+              <h3 className="text-sm md:text-base font-semibold text-slate-900 dark:text-white mb-3">📊 Equilibrio de pagos</h3>
+
+              {/* Ingresos */}
+              <div className="mb-3">
+                <div className="flex items-center justify-between text-xs mb-1">
+                  <span className="text-slate-400">Ingresos</span>
+                  <span className="text-emerald-400 font-medium">
+                    Digital {paymentMethodStats.income.digitalPct?.toFixed(0)}% · Efectivo {paymentMethodStats.income.cashPct?.toFixed(0)}%
+                  </span>
+                </div>
+                <div className="h-2 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden flex">
+                  <div className="h-full bg-primary-500 transition-all" style={{ width: `${paymentMethodStats.income.digitalPct || 0}%` }} />
+                  <div className="h-full bg-emerald-500 transition-all" style={{ width: `${paymentMethodStats.income.cashPct || 0}%` }} />
+                </div>
+                <div className="flex justify-between text-xs mt-1 text-slate-500">
+                  <span>📱 {formatCurrency(paymentMethodStats.income.digital, user?.currency)}</span>
+                  <span>💵 {formatCurrency(paymentMethodStats.income.cash, user?.currency)}</span>
+                </div>
+              </div>
+
+              {/* Gastos */}
+              <div className="mb-3">
+                <div className="flex items-center justify-between text-xs mb-1">
+                  <span className="text-slate-400">Gastos</span>
+                  <span className="text-red-400 font-medium">
+                    Digital {paymentMethodStats.expenses.digitalPct?.toFixed(0)}% · Efectivo {paymentMethodStats.expenses.cashPct?.toFixed(0)}%
+                  </span>
+                </div>
+                <div className="h-2 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden flex">
+                  <div className="h-full bg-primary-500 transition-all" style={{ width: `${paymentMethodStats.expenses.digitalPct || 0}%` }} />
+                  <div className="h-full bg-red-500 transition-all" style={{ width: `${paymentMethodStats.expenses.cashPct || 0}%` }} />
+                </div>
+                <div className="flex justify-between text-xs mt-1 text-slate-500">
+                  <span>📱 {formatCurrency(paymentMethodStats.expenses.digital, user?.currency)}</span>
+                  <span>💵 {formatCurrency(paymentMethodStats.expenses.cash, user?.currency)}</span>
+                </div>
+              </div>
+
+              {/* Equilibrio */}
+              <div className={`rounded-xl p-3 text-center mt-2 ${
+                paymentMethodStats.equilibrium >= 20
+                  ? 'bg-emerald-500/10 text-emerald-400'
+                  : paymentMethodStats.equilibrium >= 0
+                  ? 'bg-amber-500/10 text-amber-400'
+                  : 'bg-red-500/10 text-red-400'
+              }`}>
+                <p className="text-xs font-medium">
+                  {paymentMethodStats.equilibrium >= 20
+                    ? '✅ Equilibrio financiero saludable'
+                    : paymentMethodStats.equilibrium >= 0
+                    ? '⚠️ Equilibrio ajustado este mes'
+                    : '❌ Gastas más de lo que ingresas'
+                  }
+                </p>
+                <p className="text-xs mt-0.5 opacity-80">
+                  Margen: {paymentMethodStats.equilibrium?.toFixed(1)}% de tus ingresos
+                </p>
+              </div>
+            </Card>
+          )}
+        </div>
+      )}
+
+      {/* Gráficos — apilados en móvil, lado a lado en desktop */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <Card className="lg:col-span-2 p-4 md:p-6">
+          <h3 className="text-sm md:text-base font-semibold text-slate-900 dark:text-white mb-4">
+            Ingresos vs Gastos (6 meses)
+          </h3>
+          <MonthlyChart data={trend} />
+        </Card>
+        <Card className="p-4 md:p-6">
+          <h3 className="text-sm md:text-base font-semibold text-slate-900 dark:text-white mb-4">
+            Gastos por categoría
+          </h3>
+          <CategoryChart data={expensesByCategory} />
+        </Card>
+      </div>
+
+      {/* Flujo de caja + Sugerencias */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <Card className="p-4 md:p-6">
+          <h3 className="text-sm md:text-base font-semibold text-slate-900 dark:text-white mb-4">
+            Flujo de caja
+          </h3>
+          <CashFlowChart data={trend} />
+        </Card>
+
+        <Card className="p-4 md:p-6">
+          <h3 className="text-sm md:text-base font-semibold text-slate-900 dark:text-white mb-4">
+            Sugerencias inteligentes
+          </h3>
+          {recommendations.length === 0 ? (
+            <div className="text-center py-8 text-slate-400 text-sm">
+              <p className="text-2xl mb-2">✨</p>
+              ¡Tus finanzas van bien!
+            </div>
+          ) : (
+            <div className="space-y-2.5">
+              {recommendations.map((r) => (
+                <div key={r.id} className="flex gap-3 p-3 rounded-xl bg-slate-50 dark:bg-dark-850/50 border border-slate-100 dark:border-slate-700/30">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1 flex-wrap">
+                      <p className="text-xs md:text-sm font-medium text-slate-900 dark:text-white">{r.title}</p>
+                      <Badge color={priorityColor(r.priority)}>{priorityLabel(r.priority)}</Badge>
+                    </div>
+                    <p className="text-xs text-slate-400 line-clamp-2">{r.message}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </Card>
+      </div>
+
+      {/* Últimas transacciones */}
+      <Card className="p-4 md:p-6">
+        <h3 className="text-sm md:text-base font-semibold text-slate-900 dark:text-white mb-4">
+          Últimas transacciones
+        </h3>
+        {recentTransactions.length === 0 ? (
+          <p className="text-sm text-slate-400 py-4 text-center">No hay transacciones recientes</p>
+        ) : (
+          <div className="divide-y divide-slate-100 dark:divide-slate-700/30">
+            {recentTransactions.map((t) => (
+              <div key={`${t.transactionType}-${t.id}`} className="flex items-center gap-3 py-3">
+                <div className={`w-8 h-8 rounded-xl flex items-center justify-center text-sm flex-shrink-0 ${
+                  t.transactionType === 'income'
+                    ? 'bg-emerald-500/10 text-emerald-500'
+                    : 'bg-red-500/10 text-red-500'
+                }`}>
+                  {t.category?.icon || (t.transactionType === 'income' ? '↑' : '↓')}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-slate-900 dark:text-white truncate">{t.description}</p>
+                  <p className="text-xs text-slate-400 truncate">
+                    {t.category?.name || '-'} · {formatDate(t.date)}
+                  </p>
+                </div>
+                <p className={`text-sm font-semibold flex-shrink-0 ${
+                  t.transactionType === 'income' ? 'text-emerald-500' : 'text-red-500'
+                }`}>
+                  {t.transactionType === 'income' ? '+' : '-'}
+                  {formatCurrency(t.amount, user?.currency)}
+                </p>
+              </div>
+            ))}
+          </div>
+        )}
+      </Card>
+
+      {/* Score insights */}
+      {financialScore?.insights?.length > 0 && (
+        <Card className="p-4 md:p-6">
+          <h3 className="text-sm md:text-base font-semibold text-slate-900 dark:text-white mb-4">
+            Análisis de tu score
+          </h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {financialScore.insights.map((insight, i) => {
+              const colors = {
+                critical: 'border-red-500/30 bg-red-500/5 text-red-400',
+                warning:  'border-amber-500/30 bg-amber-500/5 text-amber-400',
+                info:     'border-blue-500/30 bg-blue-500/5 text-blue-400',
+              };
+              return (
+                <div key={i} className={`border rounded-xl p-3 text-xs md:text-sm ${colors[insight.type] || colors.info}`}>
+                  {insight.message}
+                </div>
+              );
+            })}
+          </div>
+        </Card>
+      )}
+    </div>
+  );
+}

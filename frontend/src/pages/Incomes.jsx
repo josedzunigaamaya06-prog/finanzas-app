@@ -1,0 +1,277 @@
+import { useEffect, useState } from 'react';
+import { incomesAPI, expensesAPI, walletsAPI } from '../services/api';
+import { formatCurrency, formatDate, toInputDate } from '../utils/formatters';
+import Card from '../components/ui/Card';
+import Button from '../components/ui/Button';
+import Modal from '../components/ui/Modal';
+import Badge from '../components/ui/Badge';
+import EmptyState from '../components/ui/EmptyState';
+import LoadingSpinner from '../components/ui/LoadingSpinner';
+import toast from 'react-hot-toast';
+import useAuthStore from '../store/authStore';
+
+const PAYMENT_METHOD_LABELS = { DIGITAL: { label: 'Digital', icon: '📱', color: 'primary' }, CASH: { label: 'Efectivo', icon: '💵', color: 'success' } };
+
+const EMPTY_FORM = {
+  description: '', amount: '', date: new Date().toISOString().split('T')[0],
+  categoryId: '', isRecurring: false, frequency: '', tags: '',
+  paymentMethod: 'DIGITAL', walletId: '',
+};
+
+export default function Incomes() {
+  const [incomes, setIncomes] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [wallets, setWallets] = useState([]);
+  const [meta, setMeta] = useState({});
+  const [loading, setLoading] = useState(true);
+  const [modal, setModal] = useState(false);
+  const [editing, setEditing] = useState(null);
+  const [form, setForm] = useState(EMPTY_FORM);
+  const [saving, setSaving] = useState(false);
+  const [page, setPage] = useState(1);
+  const [search, setSearch] = useState('');
+  const { user } = useAuthStore();
+
+  const load = async () => {
+    try {
+      const [incomesRes, catsRes, walletsRes] = await Promise.all([
+        incomesAPI.getAll({ page, limit: 15, search }),
+        expensesAPI.getCategories(),
+        walletsAPI.getAll(),
+      ]);
+      setIncomes(incomesRes.data.data);
+      setMeta(incomesRes.data.meta);
+      setCategories(catsRes.data.filter((c) => ['INCOME', 'BOTH'].includes(c.type)));
+      const wData = walletsRes.data;
+      setWallets(wData.wallets || wData);
+    } catch { toast.error('Error al cargar ingresos'); }
+    finally { setLoading(false); }
+  };
+
+  useEffect(() => { load(); }, [page, search]);
+
+  const openCreate = () => { setEditing(null); setForm(EMPTY_FORM); setModal(true); };
+  const openEdit = (income) => {
+    setEditing(income);
+    setForm({ ...income, amount: String(income.amount), date: toInputDate(income.date), tags: income.tags?.join(', ') || '', paymentMethod: income.paymentMethod || 'DIGITAL', walletId: income.walletId || '' });
+    setModal(true);
+  };
+
+  const handleSave = async (e) => {
+    e.preventDefault();
+    setSaving(true);
+    try {
+      const payload = { ...form, amount: parseFloat(form.amount), tags: form.tags ? form.tags.split(',').map((t) => t.trim()) : [] };
+      if (editing) { await incomesAPI.update(editing.id, payload); toast.success('Ingreso actualizado'); }
+      else { await incomesAPI.create(payload); toast.success('Ingreso registrado'); }
+      setModal(false); load();
+    } catch (err) { toast.error(err.response?.data?.message || 'Error al guardar'); }
+    finally { setSaving(false); }
+  };
+
+  const handleDelete = async (id) => {
+    if (!confirm('¿Eliminar este ingreso?')) return;
+    try { await incomesAPI.remove(id); toast.success('Eliminado'); load(); }
+    catch { toast.error('Error al eliminar'); }
+  };
+
+  const total = incomes.reduce((s, i) => s + i.amount, 0);
+
+  if (loading) return <div className="flex justify-center py-20"><LoadingSpinner size="lg" /></div>;
+
+  return (
+    <div className="space-y-4 animate-fade-in">
+
+      {/* Barra de acciones */}
+      <div className="flex gap-2">
+        <input
+          className="input-field flex-1 min-w-0"
+          placeholder="Buscar ingresos..."
+          value={search}
+          onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+        />
+        <Button onClick={openCreate} icon="+" variant="primary" size="sm" className="flex-shrink-0">
+          <span className="hidden sm:inline">Nuevo</span>
+        </Button>
+      </div>
+
+      {/* Stats */}
+      <div className="grid grid-cols-3 gap-3">
+        <Card className="text-center p-3 md:p-6">
+          <p className="text-xs text-slate-400 mb-1">Total</p>
+          <p className="text-base md:text-2xl font-bold text-emerald-500 truncate">{formatCurrency(total, user?.currency)}</p>
+        </Card>
+        <Card className="text-center p-3 md:p-6">
+          <p className="text-xs text-slate-400 mb-1">Registros</p>
+          <p className="text-base md:text-2xl font-bold text-slate-900 dark:text-white">{meta.total || 0}</p>
+        </Card>
+        <Card className="text-center p-3 md:p-6">
+          <p className="text-xs text-slate-400 mb-1">Promedio</p>
+          <p className="text-base md:text-2xl font-bold text-slate-900 dark:text-white truncate">
+            {incomes.length ? formatCurrency(total / incomes.length, user?.currency) : '-'}
+          </p>
+        </Card>
+      </div>
+
+      {incomes.length === 0 ? (
+        <Card>
+          <EmptyState icon="💰" title="Sin ingresos" description="Registra tu primer ingreso" action={openCreate} actionLabel="Agregar" />
+        </Card>
+      ) : (
+        <>
+          {/* Vista escritorio: tabla */}
+          <Card className="p-0 overflow-hidden hidden md:block">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-slate-100 dark:border-slate-700/50">
+                    {['Descripción', 'Categoría', 'Fecha', 'Tipo', 'Monto', ''].map((h) => (
+                      <th key={h} className="text-left text-xs font-medium text-slate-400 px-4 py-3">{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-700/30">
+                  {incomes.map((income) => (
+                    <tr key={income.id} className="hover:bg-slate-50 dark:hover:bg-dark-850/50 transition-colors">
+                      <td className="px-4 py-3">
+                        <p className="text-sm font-medium text-slate-900 dark:text-white">{income.description}</p>
+                      </td>
+                      <td className="px-4 py-3 text-xs text-slate-500">
+                        {income.category?.icon} {income.category?.name || '-'}
+                      </td>
+                      <td className="px-4 py-3 text-xs text-slate-400">{formatDate(income.date)}</td>
+                      <td className="px-4 py-3">
+                        <div className="flex flex-col gap-1">
+                          {income.isRecurring && <Badge color="primary">Recurrente</Badge>}
+                          {income.paymentMethod && (
+                            <Badge color={income.paymentMethod === 'DIGITAL' ? 'info' : 'success'}>
+                              {PAYMENT_METHOD_LABELS[income.paymentMethod]?.icon} {PAYMENT_METHOD_LABELS[income.paymentMethod]?.label}
+                            </Badge>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className="text-sm font-semibold text-emerald-500">+{formatCurrency(income.amount, user?.currency)}</span>
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex gap-2">
+                          <button onClick={() => openEdit(income)} className="text-xs text-slate-400 hover:text-primary-500 transition-colors">Editar</button>
+                          <button onClick={() => handleDelete(income.id)} className="text-xs text-slate-400 hover:text-red-500 transition-colors">Eliminar</button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </Card>
+
+          {/* Vista móvil: tarjetas */}
+          <div className="md:hidden space-y-2">
+            {incomes.map((income) => (
+              <Card key={income.id} className="p-4">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-semibold text-slate-900 dark:text-white truncate">{income.description}</p>
+                    <p className="text-xs text-slate-400 mt-0.5">
+                      {income.category?.icon} {income.category?.name || 'Sin categoría'} · {formatDate(income.date)}
+                    </p>
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      {income.isRecurring && <Badge color="primary">Recurrente</Badge>}
+                      {income.paymentMethod && (
+                        <Badge color={income.paymentMethod === 'DIGITAL' ? 'info' : 'success'}>
+                          {PAYMENT_METHOD_LABELS[income.paymentMethod]?.icon} {PAYMENT_METHOD_LABELS[income.paymentMethod]?.label}
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+                  <div className="text-right flex-shrink-0">
+                    <p className="text-base font-bold text-emerald-500">+{formatCurrency(income.amount, user?.currency)}</p>
+                    <div className="flex gap-2 mt-1 justify-end">
+                      <button onClick={() => openEdit(income)} className="text-xs text-slate-400 hover:text-primary-500">Editar</button>
+                      <button onClick={() => handleDelete(income.id)} className="text-xs text-slate-400 hover:text-red-500">Eliminar</button>
+                    </div>
+                  </div>
+                </div>
+              </Card>
+            ))}
+          </div>
+        </>
+      )}
+
+      {/* Paginación */}
+      {meta.pages > 1 && (
+        <div className="flex justify-center gap-2">
+          <Button variant="secondary" size="sm" disabled={page === 1} onClick={() => setPage(p => p - 1)}>← Ant.</Button>
+          <span className="flex items-center text-sm text-slate-400">{page} / {meta.pages}</span>
+          <Button variant="secondary" size="sm" disabled={page === meta.pages} onClick={() => setPage(p => p + 1)}>Sig. →</Button>
+        </div>
+      )}
+
+      {/* Modal */}
+      <Modal isOpen={modal} onClose={() => setModal(false)} title={editing ? 'Editar ingreso' : 'Nuevo ingreso'}>
+        <form onSubmit={handleSave} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">Descripción</label>
+            <input required className="input-field" placeholder="Ej: Salario mensual" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">Monto</label>
+              <input required type="number" min="0" step="any" className="input-field" placeholder="0" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">Fecha</label>
+              <input required type="date" className="input-field" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">Categoría</label>
+              <select className="input-field" value={form.categoryId} onChange={(e) => setForm({ ...form, categoryId: e.target.value })}>
+                <option value="">Sin categoría</option>
+                {categories.map((c) => <option key={c.id} value={c.id}>{c.icon} {c.name}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">Método de pago</label>
+              <select className="input-field" value={form.paymentMethod} onChange={(e) => setForm({ ...form, paymentMethod: e.target.value })}>
+                <option value="DIGITAL">📱 Digital</option>
+                <option value="CASH">💵 Efectivo</option>
+              </select>
+            </div>
+          </div>
+          {wallets.length > 0 && (
+            <div>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">Billetera de destino (opcional)</label>
+              <select className="input-field" value={form.walletId} onChange={(e) => setForm({ ...form, walletId: e.target.value })}>
+                <option value="">Sin billetera asociada</option>
+                {wallets.map((w) => <option key={w.id} value={w.id}>{w.icon} {w.name}</option>)}
+              </select>
+            </div>
+          )}
+          <div className="flex items-center gap-3">
+            <input type="checkbox" id="recurring" checked={form.isRecurring} onChange={(e) => setForm({ ...form, isRecurring: e.target.checked })} className="rounded" />
+            <label htmlFor="recurring" className="text-sm text-slate-700 dark:text-slate-300">Ingreso recurrente</label>
+          </div>
+          {form.isRecurring && (
+            <select className="input-field" value={form.frequency} onChange={(e) => setForm({ ...form, frequency: e.target.value })}>
+              <option value="MONTHLY">Mensual</option>
+              <option value="BIWEEKLY">Quincenal</option>
+              <option value="WEEKLY">Semanal</option>
+              <option value="ANNUALLY">Anual</option>
+            </select>
+          )}
+          <div>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">Etiquetas (separadas por coma)</label>
+            <input className="input-field" placeholder="trabajo, extra, bono" value={form.tags} onChange={(e) => setForm({ ...form, tags: e.target.value })} />
+          </div>
+          <div className="flex gap-3 pt-2">
+            <Button type="button" variant="secondary" className="flex-1" onClick={() => setModal(false)}>Cancelar</Button>
+            <Button type="submit" className="flex-1" loading={saving}>Guardar</Button>
+          </div>
+        </form>
+      </Modal>
+    </div>
+  );
+}

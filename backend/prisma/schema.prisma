@@ -1,0 +1,326 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id               String    @id @default(cuid())
+  email            String    @unique
+  password         String
+  name             String
+  avatar           String?
+  currency         String    @default("COP")
+  timezone         String    @default("America/Bogota")
+  resetToken       String?
+  resetTokenExpiry DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  incomes         Income[]
+  expenses        Expense[]
+  debts           Debt[]
+  goals           Goal[]
+  budgets         Budget[]
+  recommendations Recommendation[]
+  categories      Category[]
+  wallets         Wallet[]
+
+  @@map("users")
+}
+
+// ─── MONEDEROS ──────────────────────────────────────────────────────────────
+
+model Wallet {
+  id        String     @id @default(cuid())
+  userId    String
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name      String
+  type      WalletType
+  balance   Decimal    @db.Decimal(15, 2)
+  icon      String?
+  color     String?
+  isActive  Boolean    @default(true)
+  notes     String?
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  incomes  Income[]
+  expenses Expense[]
+
+  @@map("wallets")
+  @@index([userId])
+}
+
+enum WalletType {
+  SAVINGS_ACCOUNT   // Cuenta de ahorros
+  DIGITAL_WALLET    // Nequi, Daviplata, Nu, etc.
+  CHECKING_ACCOUNT  // Cuenta corriente
+  CASH              // Efectivo físico
+  INVESTMENT        // CDT, inversiones
+  OTHER
+}
+
+// ─── CATEGORÍAS ─────────────────────────────────────────────────────────────
+
+model Category {
+  id        String       @id @default(cuid())
+  name      String
+  icon      String?
+  color     String?
+  type      CategoryType
+  isDefault Boolean      @default(false)
+  userId    String?
+  user      User?        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime     @default(now())
+
+  incomes  Income[]
+  expenses Expense[]
+  budgets  Budget[]
+
+  @@map("categories")
+}
+
+enum CategoryType {
+  INCOME
+  EXPENSE
+  BOTH
+}
+
+// ─── INGRESOS ───────────────────────────────────────────────────────────────
+
+model Income {
+  id            String               @id @default(cuid())
+  userId        String
+  user          User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  categoryId    String?
+  category      Category?            @relation(fields: [categoryId], references: [id])
+  walletId      String?
+  wallet        Wallet?              @relation(fields: [walletId], references: [id])
+  amount        Decimal              @db.Decimal(15, 2)
+  description   String
+  date          DateTime
+  paymentMethod PaymentMethod?
+  isRecurring   Boolean              @default(false)
+  frequency     RecurrenceFrequency?
+  tags          String[]
+  createdAt     DateTime             @default(now())
+  updatedAt     DateTime             @updatedAt
+
+  @@map("incomes")
+  @@index([userId, date])
+}
+
+// ─── GASTOS ─────────────────────────────────────────────────────────────────
+
+model Expense {
+  id            String               @id @default(cuid())
+  userId        String
+  user          User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  categoryId    String?
+  category      Category?            @relation(fields: [categoryId], references: [id])
+  budgetId      String?
+  budget        Budget?              @relation(fields: [budgetId], references: [id])
+  walletId      String?
+  wallet        Wallet?              @relation(fields: [walletId], references: [id])
+  amount        Decimal              @db.Decimal(15, 2)
+  description   String
+  date          DateTime
+  type          ExpenseType          @default(VARIABLE)
+  paymentMethod PaymentMethod?
+  isRecurring   Boolean              @default(false)
+  frequency     RecurrenceFrequency?
+  tags          String[]
+  createdAt     DateTime             @default(now())
+  updatedAt     DateTime             @updatedAt
+
+  @@map("expenses")
+  @@index([userId, date])
+  @@index([userId, categoryId])
+}
+
+enum PaymentMethod {
+  DIGITAL
+  CASH
+}
+
+enum ExpenseType {
+  FIXED
+  VARIABLE
+}
+
+enum RecurrenceFrequency {
+  DAILY
+  WEEKLY
+  BIWEEKLY
+  MONTHLY
+  QUARTERLY
+  ANNUALLY
+}
+
+// ─── DEUDAS ─────────────────────────────────────────────────────────────────
+
+model Debt {
+  id             String       @id @default(cuid())
+  userId         String
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name           String
+  entity         String
+  debtCategory   DebtCategory @default(OTHER)
+  totalAmount    Decimal      @db.Decimal(15, 2)
+  currentBalance Decimal      @db.Decimal(15, 2)
+  interestRate   Decimal      @db.Decimal(6, 4)
+  interestPeriod InterestPeriod @default(ANNUAL) // si la tasa es mensual o anual
+  minimumPayment Decimal      @db.Decimal(15, 2)
+  dueDate        Int
+  interestType   InterestType @default(COMPOUND)
+  startDate      DateTime
+  endDate        DateTime?
+  isActive       Boolean      @default(true)
+  isNegotiable   Boolean      @default(true)
+  notes          String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  payments DebtPayment[]
+
+  @@map("debts")
+  @@index([userId])
+}
+
+enum DebtCategory {
+  CREDIT_CARD         // Tarjeta de crédito
+  BANK_LOAN           // Préstamo bancario
+  THIRD_PARTY         // Deuda a tercero (amigo, familiar) sin interés o baja
+  THIRD_PARTY_INTEREST // Tercero con interés fijo mensual (tipo gota a gota)
+  INFORMAL            // Prestamista informal / gota a gota
+  TELECOM             // Telefonía, internet
+  STORE_CREDIT        // Crédito en tienda (ropa, muebles, electro)
+  VEHICLE             // Crédito vehículo
+  MORTGAGE            // Hipoteca / crédito hipotecario
+  STUDENT_LOAN        // Crédito educativo
+  OTHER
+}
+
+enum InterestPeriod {
+  MONTHLY  // La tasa ingresada es mensual
+  ANNUAL   // La tasa ingresada es anual
+}
+
+enum InterestType {
+  SIMPLE
+  COMPOUND
+}
+
+model DebtPayment {
+  id        String   @id @default(cuid())
+  debtId    String
+  debt      Debt     @relation(fields: [debtId], references: [id], onDelete: Cascade)
+  amount    Decimal  @db.Decimal(15, 2)
+  date      DateTime
+  note      String?
+  createdAt DateTime @default(now())
+
+  @@map("debt_payments")
+}
+
+// ─── METAS ──────────────────────────────────────────────────────────────────
+
+model Goal {
+  id            String    @id @default(cuid())
+  userId        String
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name          String
+  description   String?
+  targetAmount  Decimal   @db.Decimal(15, 2)
+  currentAmount Decimal   @db.Decimal(15, 2) @default(0)
+  deadline      DateTime?
+  isCompleted   Boolean   @default(false)
+  color         String?
+  icon          String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  contributions GoalContribution[]
+
+  @@map("goals")
+  @@index([userId])
+}
+
+model GoalContribution {
+  id        String   @id @default(cuid())
+  goalId    String
+  goal      Goal     @relation(fields: [goalId], references: [id], onDelete: Cascade)
+  amount    Decimal  @db.Decimal(15, 2)
+  date      DateTime
+  note      String?
+  createdAt DateTime @default(now())
+
+  @@map("goal_contributions")
+}
+
+// ─── PRESUPUESTOS ───────────────────────────────────────────────────────────
+
+model Budget {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  categoryId String
+  category   Category @relation(fields: [categoryId], references: [id])
+  amount     Decimal  @db.Decimal(15, 2)
+  month      Int
+  year       Int
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  expenses Expense[]
+
+  @@unique([userId, categoryId, month, year])
+  @@map("budgets")
+  @@index([userId, year, month])
+}
+
+// ─── RECOMENDACIONES ────────────────────────────────────────────────────────
+
+model Recommendation {
+  id          String             @id @default(cuid())
+  userId      String
+  user        User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type        RecommendationType
+  title       String
+  message     String
+  priority    Priority           @default(MEDIUM)
+  isRead      Boolean            @default(false)
+  isDismissed Boolean            @default(false)
+  data        Json?
+  createdAt   DateTime           @default(now())
+  expiresAt   DateTime?
+
+  @@map("recommendations")
+  @@index([userId, isRead])
+}
+
+enum RecommendationType {
+  SPENDING_ALERT
+  SAVINGS_OPPORTUNITY
+  DEBT_STRATEGY
+  DEBT_NEGOTIATION
+  BUDGET_EXCEEDED
+  INCOME_GROWTH
+  EXPENSE_REDUCTION
+  GOAL_PROGRESS
+  CASH_FLOW_RISK
+  PAYMENT_METHOD_INSIGHT
+  WALLET_LOW_BALANCE
+  GENERAL
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}

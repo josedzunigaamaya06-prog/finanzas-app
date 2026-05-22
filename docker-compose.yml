@@ -1,0 +1,67 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: finanzas_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-finanzas}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-finanzas123}
+      POSTGRES_DB: ${POSTGRES_DB:-finanzas_db}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-finanzas}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: finanzas_backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-finanzas}:${POSTGRES_PASSWORD:-finanzas123}@postgres:5432/${POSTGRES_DB:-finanzas_db}
+      JWT_SECRET: ${JWT_SECRET:-supersecretjwtkey2024finanzas}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-supersecretrefreshkey2024}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-15m}
+      JWT_REFRESH_EXPIRES_IN: ${JWT_REFRESH_EXPIRES_IN:-7d}
+      PORT: 5000
+      NODE_ENV: ${NODE_ENV:-development}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3000}
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    command: sh -c "npx prisma db push && node prisma/seed.js && npm run dev"
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: finanzas_frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    environment:
+      # API_TARGET es solo para el servidor Vite (proxy), no va al navegador
+      API_TARGET: http://backend:5000
+      # Sin VITE_API_URL → el frontend usa rutas relativas (/api) → el proxy las enruta
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+
+volumes:
+  postgres_data:
+    driver: local
