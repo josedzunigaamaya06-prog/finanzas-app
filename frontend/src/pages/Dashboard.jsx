@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { dashboardAPI } from '../services/api';
+import { differenceInDays, parseISO, format } from 'date-fns';
+import { es } from 'date-fns/locale';
+import { dashboardAPI, remindersAPI } from '../services/api';
 import { formatCurrency, formatPercent, formatDate, priorityColor, priorityLabel } from '../utils/formatters';
 import Card from '../components/ui/Card';
 import Badge from '../components/ui/Badge';
@@ -44,6 +46,7 @@ const StatCard = ({ label, value, sub, icon, color = 'default', trend }) => {
 export default function Dashboard() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [upcomingReminders, setUpcomingReminders] = useState([]);
   const { user } = useAuthStore();
 
   useEffect(() => {
@@ -51,6 +54,9 @@ export default function Dashboard() {
       .then((r) => setData(r.data))
       .catch(console.error)
       .finally(() => setLoading(false));
+    remindersAPI.getUpcoming()
+      .then((r) => setUpcomingReminders(r.data.data || []))
+      .catch(() => {});
   }, []);
 
   if (loading) return <div className="flex justify-center py-20"><LoadingSpinner size="lg" /></div>;
@@ -310,6 +316,47 @@ export default function Dashboard() {
           </div>
         )}
       </Card>
+
+      {/* Próximos pagos */}
+      {upcomingReminders.length > 0 && (
+        <Card className="p-4 md:p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-sm md:text-base font-semibold text-slate-900 dark:text-white">
+              🔔 Próximos pagos
+            </h3>
+            <Link to="/calendar" className="text-xs text-primary-600 dark:text-primary-400 hover:underline font-medium">
+              Ver calendario →
+            </Link>
+          </div>
+          <div className="space-y-2">
+            {upcomingReminders.slice(0, 5).map((r) => {
+              const days = differenceInDays(parseISO(r.dueDate), new Date());
+              const urgencyColor = days <= 0 ? 'text-red-500' : days <= 2 ? 'text-amber-500' : 'text-blue-500';
+              const urgencyLabel = days <= 0 ? '¡Hoy!' : days === 1 ? 'Mañana' : `${days}d`;
+              const TYPE_ICONS = { DEBT:'🏦', SUBSCRIPTION:'📱', LOAN:'💳', SERVICE:'🔧', TAX:'📋', CUSTOM:'📌' };
+              return (
+                <div key={r.id} className="flex items-center gap-3 p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/50">
+                  <div className="w-8 h-8 rounded-lg flex items-center justify-center text-sm flex-shrink-0" style={{ backgroundColor: (r.color || '#6366f1') + '20' }}>
+                    {TYPE_ICONS[r.type] || '📌'}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-slate-900 dark:text-white truncate">{r.title}</p>
+                    {r.amount != null && (
+                      <p className="text-xs text-slate-400">
+                        {new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(r.amount)}
+                      </p>
+                    )}
+                  </div>
+                  <div className="text-right flex-shrink-0">
+                    <p className={`text-xs font-bold ${urgencyColor}`}>{urgencyLabel}</p>
+                    <p className="text-xs text-slate-400">{format(parseISO(r.dueDate), "d MMM", { locale: es })}</p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </Card>
+      )}
 
       {/* Score insights */}
       {financialScore?.insights?.length > 0 && (

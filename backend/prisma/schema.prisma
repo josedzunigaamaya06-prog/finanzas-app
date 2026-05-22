@@ -28,6 +28,7 @@ model User {
   recommendations Recommendation[]
   categories      Category[]
   wallets         Wallet[]
+  reminders       Reminder[]
 
   @@map("users")
 }
@@ -323,4 +324,45 @@ enum Priority {
   MEDIUM
   HIGH
   CRITICAL
+}
+
+// ─── RECORDATORIOS ──────────────────────────────────────────────────────────
+
+model Reminder {
+  id            String        @id @default(cuid())
+  userId        String
+  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title         String
+  description   String?
+  amount        Decimal?      @db.Decimal(15, 2)
+  dueDate       DateTime
+  type          ReminderType
+  isRecurring   Boolean       @default(false)
+  frequency     ReminderFreq?
+  isPaid        Boolean       @default(false)
+  color         String?       @default("#6366f1")
+  lastEmailSent DateTime?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@map("reminders")
+  @@index([userId, dueDate])
+  @@index([userId, isPaid])
+}
+
+enum ReminderType {
+  DEBT
+  SUBSCRIPTION
+  LOAN
+  SERVICE
+  TAX
+  CUSTOM
+}
+
+enum ReminderFreq {
+  DAILY
+  WEEKLY
+  BIWEEKLY
+  MONTHLY
+  YEARLY
 }

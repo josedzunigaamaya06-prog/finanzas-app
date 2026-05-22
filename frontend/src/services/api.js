@@ -108,4 +108,13 @@ export const walletsAPI = {
   remove: (id) => api.delete(`/wallets/${id}`),
 };
 
+export const remindersAPI = {
+  getAll: (params) => api.get('/reminders', { params }),
+  getUpcoming: () => api.get('/reminders/upcoming'),
+  create: (data) => api.post('/reminders', data),
+  update: (id, data) => api.put(`/reminders/${id}`, data),
+  remove: (id) => api.delete(`/reminders/${id}`),
+  markPaid: (id, isPaid) => api.put(`/reminders/${id}`, { isPaid }),
+};
+
 export default api;

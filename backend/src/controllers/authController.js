@@ -1,4 +1,5 @@
 const authService = require('../services/authService');
+const { sendUpcomingRemindersEmail } = require('../services/emailService');
 
 const register = async (req, res, next) => {
   try {
@@ -16,6 +17,10 @@ const login = async (req, res, next) => {
     const { email, password } = req.body;
     const result = await authService.login({ email, password });
     res.json({ message: 'Login exitoso', ...result });
+    // Enviar emails de recordatorios próximos (asíncrono, no bloquea respuesta)
+    if (result.user?.id) {
+      sendUpcomingRemindersEmail(result.user.id).catch(console.error);
+    }
   } catch (err) {
     if (err.status) res.status(err.status);
     next(err);

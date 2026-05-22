@@ -1,5 +1,6 @@
 import { useLocation, NavLink } from 'react-router-dom';
 import useThemeStore from '../../store/themeStore';
+import NotificationBell from '../NotificationBell';
 
 const pageTitles = {
   '/dashboard':       { title: 'Dashboard',      subtitle: 'Resumen financiero' },
@@ -11,6 +12,8 @@ const pageTitles = {
   '/recommendations': { title: 'Sugerencias',     subtitle: 'Insights inteligentes' },
   '/reports':         { title: 'Reportes',        subtitle: 'Análisis y estadísticas' },
   '/profile':         { title: 'Perfil',          subtitle: 'Tu cuenta' },
+  '/calendar':        { title: 'Calendario',      subtitle: 'Recordatorios y pagos' },
+  '/wallets':         { title: 'Billeteras',      subtitle: 'Tus cuentas y efectivo' },
 };
 
 export default function Header({ onMenuClick }) {
@@ -47,6 +50,7 @@ export default function Header({ onMenuClick }) {
 
       {/* Derecha: acciones */}
       <div className="flex items-center gap-1 flex-shrink-0">
+        <NotificationBell />
         <NavLink
           to="/recommendations"
           className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-slate-100 dark:hover:bg-slate-700/50 text-slate-500 dark:text-slate-400 transition-colors"

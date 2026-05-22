@@ -2,8 +2,8 @@ import { NavLink } from 'react-router-dom';
 
 const items = [
   { to: '/dashboard', icon: '⊞', label: 'Inicio' },
-  { to: '/wallets',   icon: '👛', label: 'Billeteras' },
   { to: '/incomes',   icon: '↑',  label: 'Ingresos' },
+  { to: '/calendar',  icon: '📅', label: 'Calendario' },
   { to: '/expenses',  icon: '↓',  label: 'Gastos' },
   { to: '/debts',     icon: '🏦', label: 'Deudas' },
 ];

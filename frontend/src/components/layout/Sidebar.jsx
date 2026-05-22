@@ -8,6 +8,7 @@ const navItems = [
   { to: '/incomes',         icon: '↑',  label: 'Ingresos' },
   { to: '/expenses',        icon: '↓',  label: 'Gastos' },
   { to: '/debts',           icon: '🏦', label: 'Deudas' },
+  { to: '/calendar',        icon: '📅', label: 'Calendario' },
   { to: '/goals',           icon: '🎯', label: 'Metas' },
   { to: '/budgets',         icon: '📊', label: 'Presupuestos' },
   { to: '/recommendations', icon: '💡', label: 'Sugerencias' },

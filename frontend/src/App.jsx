@@ -16,6 +16,7 @@ import Reports from './pages/Reports';
 import Recommendations from './pages/Recommendations';
 import Profile from './pages/Profile';
 import Wallets from './pages/Wallets';
+import Calendar from './pages/Calendar';
 import LoadingSpinner from './components/ui/LoadingSpinner';
 
 const PrivateRoute = ({ children }) => {
@@ -54,6 +55,7 @@ export default function App() {
         <Route path="budgets" element={<Budgets />} />
         <Route path="reports" element={<Reports />} />
         <Route path="wallets" element={<Wallets />} />
+        <Route path="calendar" element={<Calendar />} />
         <Route path="recommendations" element={<Recommendations />} />
         <Route path="profile" element={<Profile />} />
       </Route>
