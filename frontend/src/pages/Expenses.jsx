@@ -56,22 +56,27 @@ export default function Expenses() {
   useEffect(() => { load(); }, [page, filters]);
 
   // Verificar reglas automáticas localmente al escribir descripción
+  // Soporta múltiples palabras clave separadas por coma: "netflix, spotify, hbo"
   const checkRulesLocally = (description) => {
     if (!description.trim()) { setAutoApplied(null); return; }
     const desc = description.toLowerCase().trim();
     const activeRules = rules.filter((r) => r.isActive).sort((a, b) => a.priority - b.priority);
     for (const rule of activeRules) {
-      const kw = rule.keyword.toLowerCase().trim();
-      let matches = false;
-      switch (rule.condition) {
-        case 'contains':    matches = desc.includes(kw);    break;
-        case 'starts_with': matches = desc.startsWith(kw);  break;
-        case 'ends_with':   matches = desc.endsWith(kw);    break;
-        case 'equals':      matches = desc === kw;           break;
+      const keywords = rule.keyword.toLowerCase().split(',').map((k) => k.trim()).filter(Boolean);
+      let matchedKw = null;
+      for (const kw of keywords) {
+        let m = false;
+        switch (rule.condition) {
+          case 'contains':    m = desc.includes(kw);    break;
+          case 'starts_with': m = desc.startsWith(kw);  break;
+          case 'ends_with':   m = desc.endsWith(kw);    break;
+          case 'equals':      m = desc === kw;           break;
+        }
+        if (m) { matchedKw = kw; break; }
       }
-      if (matches) {
+      if (matchedKw) {
         setForm((f) => ({ ...f, categoryId: rule.categoryId }));
-        setAutoApplied({ keyword: rule.keyword, categoryName: `${rule.category?.icon || ''} ${rule.category?.name}` });
+        setAutoApplied({ keyword: matchedKw, categoryName: `${rule.category?.icon || ''} ${rule.category?.name}` });
         return;
       }
     }

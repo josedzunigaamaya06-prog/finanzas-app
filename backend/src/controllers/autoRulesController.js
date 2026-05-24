@@ -14,14 +14,18 @@ const applyRules = async (userId, description) => {
   const desc = description.toLowerCase().trim();
 
   for (const rule of rules) {
-    const keyword = rule.keyword.toLowerCase().trim();
+    // Soporta múltiples palabras clave separadas por coma: "netflix, spotify, hbo"
+    const keywords = rule.keyword.toLowerCase().split(',').map((k) => k.trim()).filter(Boolean);
     let matches = false;
 
-    switch (rule.condition) {
-      case 'contains':    matches = desc.includes(keyword);    break;
-      case 'starts_with': matches = desc.startsWith(keyword);  break;
-      case 'ends_with':   matches = desc.endsWith(keyword);    break;
-      case 'equals':      matches = desc === keyword;           break;
+    for (const keyword of keywords) {
+      switch (rule.condition) {
+        case 'contains':    matches = desc.includes(keyword);    break;
+        case 'starts_with': matches = desc.startsWith(keyword);  break;
+        case 'ends_with':   matches = desc.endsWith(keyword);    break;
+        case 'equals':      matches = desc === keyword;           break;
+      }
+      if (matches) break;
     }
 
     if (matches) {

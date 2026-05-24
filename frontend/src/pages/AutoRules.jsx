@@ -289,7 +289,7 @@ export default function AutoRules() {
               <input
                 required
                 className="input-field"
-                placeholder="Ej: McDonald, Netflix..."
+                placeholder="Ej: netflix, spotify, hbo (separar con coma)"
                 value={form.keyword}
                 onChange={(e) => setForm({ ...form, keyword: e.target.value })}
               />
