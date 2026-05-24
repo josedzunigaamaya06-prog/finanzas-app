@@ -242,6 +242,66 @@ const STEPS = [
     ),
   },
   {
+    id: 'smart',
+    emoji: '🤖',
+    title: 'Funciones Inteligentes',
+    subtitle: 'La app aprende contigo y te ayuda a decidir mejor',
+    color: 'from-violet-500 to-fuchsia-600',
+    content: (
+      <div className="space-y-3">
+        <p className="text-slate-600 dark:text-slate-300 text-sm leading-relaxed">
+          FinanzasPro tiene herramientas avanzadas que <strong>analizan tus datos automáticamente</strong>:
+        </p>
+
+        <div className="space-y-2">
+          {[
+            {
+              icon: '⚡',
+              title: 'Reglas automáticas',
+              desc: 'Crea reglas como "si el gasto dice Netflix → categoría Suscripciones". La app lo categoriza sola.',
+              where: 'Reglas auto',
+            },
+            {
+              icon: '🤖',
+              title: 'Sugerencia de categoría con IA',
+              desc: 'Al escribir la descripción del gasto, la IA te sugiere la categoría correcta al instante.',
+              where: 'Al agregar un gasto',
+            },
+            {
+              icon: '🔍',
+              title: 'Análisis de hábitos',
+              desc: 'Detecta gastos hormiga (muchos pagos pequeños) y suscripciones olvidadas que drenan tu dinero.',
+              where: 'Análisis',
+            },
+            {
+              icon: '📈',
+              title: 'Predicción de fin de mes',
+              desc: 'Estima cuánto gastarás a fin de mes según tu ritmo actual e historial.',
+              where: 'Predicción',
+            },
+            {
+              icon: '🏆',
+              title: 'Score de salud financiera',
+              desc: 'Obtén un puntaje de 0 a 100 que mide tu ahorro, deudas, metas y control de presupuesto.',
+              where: 'Mi salud',
+            },
+          ].map((item) => (
+            <div key={item.title} className="flex items-start gap-3 p-2.5 bg-slate-50 dark:bg-slate-800 rounded-xl">
+              <span className="text-xl flex-shrink-0 mt-0.5">{item.icon}</span>
+              <div className="min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <p className="text-sm font-semibold text-slate-800 dark:text-white">{item.title}</p>
+                  <span className="text-xs bg-violet-100 dark:bg-violet-500/20 text-violet-600 dark:text-violet-400 px-1.5 py-0.5 rounded-md">{item.where}</span>
+                </div>
+                <p className="text-xs text-slate-400 mt-0.5 leading-relaxed">{item.desc}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    ),
+  },
+  {
     id: 'done',
     emoji: '🚀',
     title: '¡Todo listo!',
@@ -260,6 +320,7 @@ const STEPS = [
             { num: '3', icon: '💸', text: 'Agrega tus gastos fijos (arriendo, servicios...)' },
             { num: '4', icon: '📊', text: 'Crea un presupuesto por categoría' },
             { num: '5', icon: '📅', text: 'Añade recordatorios de tus fechas de pago' },
+            { num: '6', icon: '🏆', text: 'Consulta tu Score de salud financiera en "Mi salud"' },
           ].map((step) => (
             <div key={step.num} className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-800 rounded-xl">
               <div className="w-6 h-6 rounded-full bg-primary-600 text-white text-xs font-bold flex items-center justify-center flex-shrink-0">
