@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Outlet } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import Header from './Header';
@@ -6,8 +6,19 @@ import BottomNav from './BottomNav';
 import OnboardingModal from '../OnboardingModal';
 
 export default function Layout() {
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed]   = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [isDesktop, setIsDesktop]   = useState(() => window.innerWidth >= 768);
+
+  // Detectar si es desktop para aplicar el margen correctamente
+  useEffect(() => {
+    const onResize = () => setIsDesktop(window.innerWidth >= 768);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+
+  // Margen del contenido según estado del sidebar (solo en desktop)
+  const contentMargin = isDesktop ? (collapsed ? '4rem' : '16rem') : '0px';
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-dark-900">
@@ -28,8 +39,11 @@ export default function Layout() {
         onMobileClose={() => setMobileOpen(false)}
       />
 
-      {/* Contenido principal */}
-      <div className={`transition-all duration-300 ease-in-out ${collapsed ? 'md:ml-16' : 'md:ml-64'}`}>
+      {/* Contenido principal — margen inline para garantizar que funcione en producción */}
+      <div
+        className="transition-all duration-300 ease-in-out"
+        style={{ marginLeft: contentMargin }}
+      >
         <Header onMenuClick={() => setMobileOpen(true)} />
         <main className="p-3 sm:p-4 md:p-6 min-h-[calc(100vh-4rem)] pb-20 md:pb-8">
           <Outlet />
