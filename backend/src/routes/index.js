@@ -15,5 +15,6 @@ router.use('/dashboard',       require('./dashboard'));
 router.use('/recommendations', require('./recommendations'));
 router.use('/reports',         require('./reports'));
 router.use('/reminders',       require('./reminders'));
+router.use('/auto-rules',      require('./autoRules'));
 
 module.exports = router;

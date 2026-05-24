@@ -12,6 +12,7 @@ const navItems = [
   { to: '/goals',           icon: '🎯', label: 'Metas' },
   { to: '/budgets',         icon: '📊', label: 'Presupuestos' },
   { to: '/recommendations', icon: '💡', label: 'Sugerencias' },
+  { to: '/auto-rules',      icon: '⚡', label: 'Reglas auto' },
   { to: '/reports',         icon: '📈', label: 'Reportes' },
 ];
 

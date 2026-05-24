@@ -108,6 +108,14 @@ export const walletsAPI = {
   remove: (id) => api.delete(`/wallets/${id}`),
 };
 
+export const autoRulesAPI = {
+  getAll:  ()          => api.get('/auto-rules'),
+  create:  (data)      => api.post('/auto-rules', data),
+  update:  (id, data)  => api.put(`/auto-rules/${id}`, data),
+  remove:  (id)        => api.delete(`/auto-rules/${id}`),
+  check:   (description) => api.post('/auto-rules/check', { description }),
+};
+
 export const remindersAPI = {
   getAll: (params) => api.get('/reminders', { params }),
   getUpcoming: () => api.get('/reminders/upcoming'),

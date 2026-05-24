@@ -17,6 +17,7 @@ import Recommendations from './pages/Recommendations';
 import Profile from './pages/Profile';
 import Wallets from './pages/Wallets';
 import Calendar from './pages/Calendar';
+import AutoRules from './pages/AutoRules';
 import LoadingSpinner from './components/ui/LoadingSpinner';
 
 const PrivateRoute = ({ children }) => {
@@ -57,6 +58,7 @@ export default function App() {
         <Route path="wallets" element={<Wallets />} />
         <Route path="calendar" element={<Calendar />} />
         <Route path="recommendations" element={<Recommendations />} />
+        <Route path="auto-rules" element={<AutoRules />} />
         <Route path="profile" element={<Profile />} />
       </Route>
       <Route path="*" element={<Navigate to="/dashboard" replace />} />

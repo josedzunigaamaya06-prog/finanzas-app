@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { expensesAPI, walletsAPI } from '../services/api';
+import { useEffect, useState, useRef } from 'react';
+import { expensesAPI, walletsAPI, autoRulesAPI } from '../services/api';
 import { formatCurrency, formatDate, toInputDate } from '../utils/formatters';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
@@ -30,30 +30,65 @@ export default function Expenses() {
   const [saving, setSaving] = useState(false);
   const [page, setPage] = useState(1);
   const [filters, setFilters] = useState({ search: '', categoryId: '', type: '' });
+  const [rules, setRules] = useState([]);
+  const [autoApplied, setAutoApplied] = useState(null); // { keyword, categoryName }
+  const debounceRef = useRef(null);
   const { user } = useAuthStore();
 
   const load = async () => {
     try {
-      const [expRes, catsRes, walletsRes] = await Promise.all([
+      const [expRes, catsRes, walletsRes, rulesRes] = await Promise.all([
         expensesAPI.getAll({ page, limit: 15, ...filters }),
         expensesAPI.getCategories(),
         walletsAPI.getAll(),
+        autoRulesAPI.getAll(),
       ]);
       setExpenses(expRes.data.data);
       setMeta(expRes.data.meta);
       setCategories(catsRes.data);
       const wData = walletsRes.data;
       setWallets(wData.wallets || wData);
+      setRules(rulesRes.data || []);
     } catch { toast.error('Error al cargar gastos'); }
     finally { setLoading(false); }
   };
 
   useEffect(() => { load(); }, [page, filters]);
 
-  const openCreate = () => { setEditing(null); setForm(EMPTY_FORM); setModal(true); };
+  // Verificar reglas automáticas localmente al escribir descripción
+  const checkRulesLocally = (description) => {
+    if (!description.trim()) { setAutoApplied(null); return; }
+    const desc = description.toLowerCase().trim();
+    const activeRules = rules.filter((r) => r.isActive).sort((a, b) => a.priority - b.priority);
+    for (const rule of activeRules) {
+      const kw = rule.keyword.toLowerCase().trim();
+      let matches = false;
+      switch (rule.condition) {
+        case 'contains':    matches = desc.includes(kw);    break;
+        case 'starts_with': matches = desc.startsWith(kw);  break;
+        case 'ends_with':   matches = desc.endsWith(kw);    break;
+        case 'equals':      matches = desc === kw;           break;
+      }
+      if (matches) {
+        setForm((f) => ({ ...f, categoryId: rule.categoryId }));
+        setAutoApplied({ keyword: rule.keyword, categoryName: `${rule.category?.icon || ''} ${rule.category?.name}` });
+        return;
+      }
+    }
+    setAutoApplied(null);
+  };
+
+  const handleDescriptionChange = (value) => {
+    setForm((f) => ({ ...f, description: value }));
+    clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => checkRulesLocally(value), 300);
+  };
+
+  const openCreate = () => { setEditing(null); setForm(EMPTY_FORM); setAutoApplied(null); setModal(true); };
   const openEdit = (expense) => {
     setEditing(expense);
     setForm({ ...expense, amount: String(expense.amount), date: toInputDate(expense.date), tags: expense.tags?.join(', ') || '', paymentMethod: expense.paymentMethod || 'DIGITAL', walletId: expense.walletId || '' });
+    setAutoApplied(null);
     setModal(true);
   };
 
@@ -246,7 +281,18 @@ export default function Expenses() {
         <form onSubmit={handleSave} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">Descripción</label>
-            <input required className="input-field" placeholder="Ej: Supermercado" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
+            <input
+              required
+              className="input-field"
+              placeholder="Ej: Supermercado, Netflix..."
+              value={form.description}
+              onChange={(e) => handleDescriptionChange(e.target.value)}
+            />
+            {autoApplied && (
+              <p className="mt-1 text-xs text-primary-600 dark:text-primary-400 flex items-center gap-1">
+                ⚡ Regla aplicada: "{autoApplied.keyword}" → <strong>{autoApplied.categoryName}</strong>
+              </p>
+            )}
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
@@ -261,7 +307,7 @@ export default function Expenses() {
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">Categoría</label>
-              <select className="input-field" value={form.categoryId} onChange={(e) => setForm({ ...form, categoryId: e.target.value })}>
+              <select className="input-field" value={form.categoryId} onChange={(e) => { setForm({ ...form, categoryId: e.target.value }); setAutoApplied(null); }}>
                 <option value="">Sin categoría</option>
                 {categories.map((c) => <option key={c.id} value={c.id}>{c.icon} {c.name}</option>)}
               </select>

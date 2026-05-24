@@ -1,5 +1,6 @@
 const { PrismaClient } = require('@prisma/client');
 const { getPaginationParams, buildDateFilter } = require('../utils/helpers');
+const { applyRules } = require('./autoRulesController');
 
 const prisma = new PrismaClient();
 
@@ -151,7 +152,15 @@ const getOne = async (req, res, next) => {
 
 const create = async (req, res, next) => {
   try {
-    const { amount, description, date, categoryId, type, isRecurring, frequency, tags, budgetId, paymentMethod, walletId } = req.body;
+    const { amount, description, date, type, isRecurring, frequency, tags, budgetId, paymentMethod, walletId } = req.body;
+    let { categoryId } = req.body;
+
+    // Si no viene categoría, intentar aplicar regla automática
+    if (!categoryId) {
+      const ruleCategory = await applyRules(req.user.id, description);
+      if (ruleCategory) categoryId = ruleCategory;
+    }
+
     const expense = await prisma.expense.create({
       data: {
         userId:        req.user.id,
