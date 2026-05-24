@@ -29,7 +29,8 @@ model User {
   categories      Category[]
   wallets         Wallet[]
   reminders       Reminder[]
-  autoRules       AutoRule[]
+  autoRules        AutoRule[]
+  categoryPatterns CategoryPattern[]
 
   @@map("users")
 }
@@ -79,10 +80,11 @@ model Category {
   user      User?        @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt DateTime     @default(now())
 
-  incomes   Income[]
-  expenses  Expense[]
-  budgets   Budget[]
-  autoRules AutoRule[]
+  incomes          Income[]
+  expenses         Expense[]
+  budgets          Budget[]
+  autoRules        AutoRule[]
+  categoryPatterns CategoryPattern[]
 
   @@map("categories")
 }
@@ -367,6 +369,25 @@ enum ReminderFreq {
   BIWEEKLY
   MONTHLY
   YEARLY
+}
+
+// ─── APRENDIZAJE DE PATRONES ────────────────────────────────────────────────
+
+model CategoryPattern {
+  id          String    @id @default(cuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  keyword     String
+  categoryId  String
+  category    Category  @relation(fields: [categoryId], references: [id])
+  count       Int       @default(1)
+  ruleCreated Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@unique([userId, keyword, categoryId])
+  @@map("category_patterns")
+  @@index([userId, keyword])
 }
 
 // ─── REGLAS AUTOMÁTICAS ─────────────────────────────────────────────────────

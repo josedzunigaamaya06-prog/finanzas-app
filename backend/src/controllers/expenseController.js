@@ -1,6 +1,7 @@
 const { PrismaClient } = require('@prisma/client');
 const { getPaginationParams, buildDateFilter } = require('../utils/helpers');
-const { applyRules } = require('./autoRulesController');
+const { applyRules }    = require('./autoRulesController');
+const { trackPattern }  = require('./patternController');
 
 const prisma = new PrismaClient();
 
@@ -179,9 +180,18 @@ const create = async (req, res, next) => {
       include: { category: true },
     });
 
-    res.status(201).json({ message: 'Gasto registrado', expense: { ...expense, amount: Number(expense.amount) } });
+    // Aprendizaje de patrones (antes de responder para incluir en respuesta)
+    const learnedRule = categoryId
+      ? await trackPattern(req.user.id, description, categoryId).catch(() => null)
+      : null;
 
-    // Verificar presupuesto en segundo plano (no bloquea la respuesta)
+    res.status(201).json({
+      message: 'Gasto registrado',
+      expense: { ...expense, amount: Number(expense.amount) },
+      learnedRule, // { keyword, category } si se creó una nueva regla automática
+    });
+
+    // Verificar presupuesto en segundo plano
     checkBudgetAlert(req.user.id, categoryId, date).catch(console.error);
   } catch (err) {
     next(err);
@@ -212,11 +222,21 @@ const update = async (req, res, next) => {
       include: { category: true },
     });
 
-    res.json({ message: 'Gasto actualizado', expense: { ...expense, amount: Number(expense.amount) } });
-
-    // Verificar presupuesto con la categoría final (la nueva si cambió, si no la original)
+    // Aprender patrón si el usuario cambió la categoría manualmente
     const finalCategoryId = categoryId !== undefined ? categoryId : existing.categoryId;
     const finalDate       = date || existing.date;
+    const finalDescription = description || existing.description;
+    let learnedRule = null;
+    if (categoryId && categoryId !== existing.categoryId) {
+      learnedRule = await trackPattern(req.user.id, finalDescription, categoryId).catch(() => null);
+    }
+
+    res.json({
+      message: 'Gasto actualizado',
+      expense: { ...expense, amount: Number(expense.amount) },
+      learnedRule,
+    });
+
     checkBudgetAlert(req.user.id, finalCategoryId, finalDate).catch(console.error);
   } catch (err) {
     next(err);

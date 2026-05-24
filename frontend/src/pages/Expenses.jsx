@@ -126,8 +126,24 @@ export default function Expenses() {
     setSaving(true);
     try {
       const payload = { ...form, amount: parseFloat(form.amount), tags: form.tags ? form.tags.split(',').map((t) => t.trim()) : [] };
-      if (editing) { await expensesAPI.update(editing.id, payload); toast.success('Gasto actualizado'); }
-      else { await expensesAPI.create(payload); toast.success('Gasto registrado'); }
+      let res;
+      if (editing) {
+        res = await expensesAPI.update(editing.id, payload);
+        toast.success('Gasto actualizado');
+      } else {
+        res = await expensesAPI.create(payload);
+        toast.success('Gasto registrado');
+      }
+      // Notificar si el sistema aprendió una nueva regla automática
+      const learned = res.data?.learnedRule;
+      if (learned) {
+        setTimeout(() => {
+          toast.success(
+            `🧠 ¡Regla aprendida! "${learned.keyword}" → ${learned.category?.icon || ''} ${learned.category?.name}`,
+            { duration: 6000 }
+          );
+        }, 800);
+      }
       setModal(false); load();
     } catch (err) { toast.error(err.response?.data?.message || 'Error al guardar'); }
     finally { setSaving(false); }
