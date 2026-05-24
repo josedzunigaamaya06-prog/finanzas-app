@@ -14,6 +14,7 @@ const navItems = [
   { to: '/recommendations', icon: '💡', label: 'Sugerencias' },
   { to: '/auto-rules',      icon: '⚡', label: 'Reglas auto' },
   { to: '/insights',        icon: '🔍', label: 'Análisis' },
+  { to: '/prediction',      icon: '📈', label: 'Predicción' },
   { to: '/reports',         icon: '📈', label: 'Reportes' },
 ];
 

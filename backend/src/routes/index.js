@@ -18,5 +18,6 @@ router.use('/reminders',       require('./reminders'));
 router.use('/auto-rules',      require('./autoRules'));
 router.use('/ai',              require('./ai'));
 router.use('/insights',        require('./insights'));
+router.use('/prediction',      require('./prediction'));
 
 module.exports = router;

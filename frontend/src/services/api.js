@@ -112,6 +112,10 @@ export const insightsAPI = {
   get: () => api.get('/insights'),
 };
 
+export const predictionAPI = {
+  get: () => api.get('/prediction'),
+};
+
 export const aiAPI = {
   suggestCategory: (description) => api.post('/ai/suggest-category', { description }),
 };
