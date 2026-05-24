@@ -181,9 +181,12 @@ const create = async (req, res, next) => {
     });
 
     // Aprendizaje de patrones (antes de responder para incluir en respuesta)
-    const learnedRule = categoryId
-      ? await trackPattern(req.user.id, description, categoryId).catch(() => null)
-      : null;
+    const learnedRule = const learnedRule = categoryId
+  ? await trackPattern(req.user.id, description, categoryId).catch((err) => {
+      console.error('trackPattern error:', err.message);
+      return null;
+    })
+  : null;
 
     res.status(201).json({
       message: 'Gasto registrado',
