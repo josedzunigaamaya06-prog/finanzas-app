@@ -2,8 +2,9 @@ const suggestCategory = async (description, categories) => {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) throw new Error('ANTHROPIC_API_KEY no configurada');
 
+  // Usamos índice numérico en vez del ID largo para que Claude no se equivoque
   const categoryList = categories
-    .map((c) => `ID:${c.id} → ${c.icon || ''} ${c.name}`)
+    .map((c, i) => `${i + 1}. ${c.icon || ''} ${c.name}`)
     .join('\n');
 
   const response = await fetch('https://api.anthropic.com/v1/messages', {
@@ -15,14 +16,14 @@ const suggestCategory = async (description, categories) => {
     },
     body: JSON.stringify({
       model:      'claude-3-5-haiku-20241022',
-      max_tokens: 60,
+      max_tokens: 10,
       messages: [{
         role:    'user',
-        content: `Eres un asistente de categorización de gastos financieros personales. Dado el gasto, responde ÚNICAMENTE con el ID exacto de la categoría más apropiada. Si ninguna coincide, responde "none". Sin explicaciones, solo el ID.
+        content: `Clasifica este gasto en una de las categorías. Responde SOLO con el número de la categoría más apropiada. Si ninguna aplica, responde 0.
 
 Gasto: "${description}"
 
-Categorías disponibles:
+Categorías:
 ${categoryList}`,
       }],
     }),
@@ -33,10 +34,12 @@ ${categoryList}`,
     throw new Error(`Anthropic API error: ${err}`);
   }
 
-  const data     = await response.json();
-  const rawId    = data.content?.[0]?.text?.trim() || '';
-  const category = categories.find((c) => c.id === rawId);
-  return category || null;
+  const data  = await response.json();
+  const raw   = data.content?.[0]?.text?.trim() || '0';
+  const index = parseInt(raw, 10) - 1;
+
+  if (index < 0 || index >= categories.length) return null;
+  return categories[index] || null;
 };
 
 module.exports = { suggestCategory };
