@@ -4,9 +4,11 @@ import useAuthStore from '../store/authStore';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import toast from 'react-hot-toast';
+import { useOnboarding } from '../components/OnboardingModal';
 
 export default function Profile() {
   const { user, updateUser } = useAuthStore();
+  const { reset: resetOnboarding } = useOnboarding();
   const [form, setForm] = useState({ name: user?.name || '', currency: user?.currency || 'COP', timezone: user?.timezone || 'America/Bogota' });
   const [passForm, setPassForm] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
   const [saving, setSaving] = useState(false);
@@ -98,6 +100,22 @@ export default function Profile() {
           </div>
           <Button type="submit" variant="secondary" loading={savingPass}>Cambiar contraseña</Button>
         </form>
+      </Card>
+
+      {/* Guía de inicio */}
+      <Card>
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-base font-semibold text-slate-900 dark:text-white">📚 Guía de inicio</h3>
+            <p className="text-sm text-slate-400 mt-0.5">Vuelve a ver el tutorial de cómo usar la app</p>
+          </div>
+          <button
+            onClick={() => { resetOnboarding(); window.location.reload(); }}
+            className="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium rounded-xl transition-colors"
+          >
+            Ver guía
+          </button>
+        </div>
       </Card>
 
       <Card>

@@ -3,6 +3,7 @@ import { Outlet } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import Header from './Header';
 import BottomNav from './BottomNav';
+import OnboardingModal from '../OnboardingModal';
 
 export default function Layout() {
   const [collapsed, setCollapsed] = useState(false);
@@ -30,13 +31,16 @@ export default function Layout() {
       {/* Contenido principal */}
       <div className={`transition-all duration-300 ease-in-out md:${collapsed ? 'ml-16' : 'ml-64'}`}>
         <Header onMenuClick={() => setMobileOpen(true)} />
-        <main className="p-4 md:p-6 min-h-[calc(100vh-4rem)] pb-24 md:pb-6">
+        <main className="p-3 sm:p-4 md:p-6 min-h-[calc(100vh-4rem)] pb-20 md:pb-8 max-w-7xl mx-auto w-full">
           <Outlet />
         </main>
       </div>
 
       {/* Navegación inferior (solo móvil) */}
       <BottomNav />
+
+      {/* Guía de inicio para nuevos usuarios */}
+      <OnboardingModal />
     </div>
   );
 }
