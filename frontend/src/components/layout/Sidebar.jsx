@@ -15,7 +15,7 @@ const navItems = [
   { to: '/reports',         icon: '📈', label: 'Reportes' },
 ];
 
-export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }) {
+export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose, isDesktop }) {
   const { user, logout } = useAuthStore();
   const navigate = useNavigate();
 
@@ -36,12 +36,9 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
         fixed left-0 top-0 h-full z-40 flex flex-col
         bg-dark-900 border-r border-slate-700/50
         transition-all duration-300 ease-in-out
-        ${/* Desktop: siempre visible, colapsable */ ''}
-        ${collapsed ? 'md:w-16' : 'md:w-64'}
-        ${/* Móvil: oculto por defecto, visible cuando mobileOpen */ ''}
-        ${mobileOpen ? 'w-72 translate-x-0' : '-translate-x-full md:translate-x-0'}
-        w-72
+        ${mobileOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
       `}
+      style={{ width: isDesktop ? (collapsed ? '4rem' : '16rem') : '18rem' }}
     >
       {/* Logo */}
       <div className={`flex items-center h-16 px-4 border-b border-slate-700/50 flex-shrink-0 ${collapsed ? 'md:justify-center' : 'gap-3'}`}>

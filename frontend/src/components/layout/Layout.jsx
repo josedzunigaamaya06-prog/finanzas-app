@@ -37,6 +37,7 @@ export default function Layout() {
         onToggle={() => setCollapsed(!collapsed)}
         mobileOpen={mobileOpen}
         onMobileClose={() => setMobileOpen(false)}
+        isDesktop={isDesktop}
       />
 
       {/* Contenido principal — margen inline para garantizar que funcione en producción */}
