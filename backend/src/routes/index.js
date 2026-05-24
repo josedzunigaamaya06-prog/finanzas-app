@@ -19,5 +19,6 @@ router.use('/auto-rules',      require('./autoRules'));
 router.use('/ai',              require('./ai'));
 router.use('/insights',        require('./insights'));
 router.use('/prediction',      require('./prediction'));
+router.use('/score',           require('./score'));
 
 module.exports = router;

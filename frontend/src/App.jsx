@@ -20,6 +20,7 @@ import Calendar from './pages/Calendar';
 import AutoRules from './pages/AutoRules';
 import Insights from './pages/Insights';
 import Prediction from './pages/Prediction';
+import Score from './pages/Score';
 import LoadingSpinner from './components/ui/LoadingSpinner';
 
 const PrivateRoute = ({ children }) => {
@@ -63,6 +64,7 @@ export default function App() {
         <Route path="auto-rules" element={<AutoRules />} />
         <Route path="insights" element={<Insights />} />
         <Route path="prediction" element={<Prediction />} />
+        <Route path="score"      element={<Score />} />
         <Route path="profile" element={<Profile />} />
       </Route>
       <Route path="*" element={<Navigate to="/dashboard" replace />} />

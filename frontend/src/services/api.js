@@ -116,6 +116,10 @@ export const predictionAPI = {
   get: () => api.get('/prediction'),
 };
 
+export const scoreAPI = {
+  get: () => api.get('/score'),
+};
+
 export const aiAPI = {
   suggestCategory: (description) => api.post('/ai/suggest-category', { description }),
 };
