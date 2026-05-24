@@ -28,14 +28,13 @@ export default function AutoRules() {
 
   const load = async () => {
     try {
-      const [rulesRes, catsRes] = await Promise.all([
+      const [rulesRes, catsRes] = await Promise.allSettled([
         autoRulesAPI.getAll(),
         expensesAPI.getCategories(),
       ]);
-      setRules(rulesRes.data);
-      setCategories(catsRes.data);
-    } catch {
-      toast.error('Error al cargar reglas');
+      if (rulesRes.status === 'fulfilled') setRules(rulesRes.value.data || []);
+      if (catsRes.status === 'fulfilled')  setCategories(catsRes.value.data || []);
+      if (catsRes.status === 'rejected')   toast.error('Error al cargar categorías');
     } finally {
       setLoading(false);
     }
