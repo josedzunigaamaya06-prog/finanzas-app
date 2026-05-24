@@ -1,6 +1,9 @@
 const express = require('express');
 const router  = express.Router();
 const ctrl    = require('../controllers/autoRulesController');
+const { authenticate } = require('../middleware/auth');
+
+router.use(authenticate);
 
 router.get('/',         ctrl.getAll);
 router.post('/',        ctrl.create);
