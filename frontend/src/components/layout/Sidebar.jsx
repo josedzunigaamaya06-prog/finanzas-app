@@ -13,6 +13,7 @@ const navItems = [
   { to: '/budgets',         icon: '📊', label: 'Presupuestos' },
   { to: '/recommendations', icon: '💡', label: 'Sugerencias' },
   { to: '/auto-rules',      icon: '⚡', label: 'Reglas auto' },
+  { to: '/insights',        icon: '🔍', label: 'Análisis' },
   { to: '/reports',         icon: '📈', label: 'Reportes' },
 ];
 
