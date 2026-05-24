@@ -108,6 +108,10 @@ export const walletsAPI = {
   remove: (id) => api.delete(`/wallets/${id}`),
 };
 
+export const aiAPI = {
+  suggestCategory: (description) => api.post('/ai/suggest-category', { description }),
+};
+
 export const autoRulesAPI = {
   getAll:  ()          => api.get('/auto-rules'),
   create:  (data)      => api.post('/auto-rules', data),

@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
-import { expensesAPI, walletsAPI, autoRulesAPI } from '../services/api';
+import { expensesAPI, walletsAPI, autoRulesAPI, aiAPI } from '../services/api';
 import { formatCurrency, formatDate, toInputDate } from '../utils/formatters';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
@@ -31,8 +31,11 @@ export default function Expenses() {
   const [page, setPage] = useState(1);
   const [filters, setFilters] = useState({ search: '', categoryId: '', type: '' });
   const [rules, setRules] = useState([]);
-  const [autoApplied, setAutoApplied] = useState(null); // { keyword, categoryName }
-  const debounceRef = useRef(null);
+  const [autoApplied, setAutoApplied]     = useState(null); // { keyword, categoryName }
+  const [aiSuggestion, setAiSuggestion]   = useState(null); // { id, name, icon }
+  const [aiLoading, setAiLoading]         = useState(false);
+  const debounceRef   = useRef(null);
+  const aiDebounceRef = useRef(null);
   const { user } = useAuthStore();
 
   const load = async () => {
@@ -55,10 +58,9 @@ export default function Expenses() {
 
   useEffect(() => { load(); }, [page, filters]);
 
-  // Verificar reglas automáticas localmente al escribir descripción
-  // Soporta múltiples palabras clave separadas por coma: "netflix, spotify, hbo"
+  // Verificar reglas automáticas localmente — retorna true si hubo match
   const checkRulesLocally = (description) => {
-    if (!description.trim()) { setAutoApplied(null); return; }
+    if (!description.trim()) { setAutoApplied(null); return false; }
     const desc = description.toLowerCase().trim();
     const activeRules = rules.filter((r) => r.isActive).sort((a, b) => a.priority - b.priority);
     for (const rule of activeRules) {
@@ -77,23 +79,45 @@ export default function Expenses() {
       if (matchedKw) {
         setForm((f) => ({ ...f, categoryId: rule.categoryId }));
         setAutoApplied({ keyword: matchedKw, categoryName: `${rule.category?.icon || ''} ${rule.category?.name}` });
-        return;
+        return true;
       }
     }
     setAutoApplied(null);
+    return false;
   };
 
   const handleDescriptionChange = (value) => {
     setForm((f) => ({ ...f, description: value }));
+    setAiSuggestion(null);
+
     clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => checkRulesLocally(value), 300);
+    clearTimeout(aiDebounceRef.current);
+
+    debounceRef.current = setTimeout(() => {
+      const ruleMatched = checkRulesLocally(value);
+      // Si no hay regla y la descripción es suficientemente larga, consultar IA
+      if (!ruleMatched && value.trim().length >= 4) {
+        setAiLoading(true);
+        aiDebounceRef.current = setTimeout(async () => {
+          try {
+            const res = await aiAPI.suggestCategory(value.trim());
+            if (res.data?.category) setAiSuggestion(res.data.category);
+          } catch {}
+          setAiLoading(false);
+        }, 1200);
+      } else {
+        setAiLoading(false);
+      }
+    }, 300);
   };
 
-  const openCreate = () => { setEditing(null); setForm(EMPTY_FORM); setAutoApplied(null); setModal(true); };
+  const openCreate = () => { setEditing(null); setForm(EMPTY_FORM); setAutoApplied(null); setAiSuggestion(null); setAiLoading(false); setModal(true); };
   const openEdit = (expense) => {
     setEditing(expense);
     setForm({ ...expense, amount: String(expense.amount), date: toInputDate(expense.date), tags: expense.tags?.join(', ') || '', paymentMethod: expense.paymentMethod || 'DIGITAL', walletId: expense.walletId || '' });
     setAutoApplied(null);
+    setAiSuggestion(null);
+    setAiLoading(false);
     setModal(true);
   };
 
@@ -297,6 +321,32 @@ export default function Expenses() {
               <p className="mt-1 text-xs text-primary-600 dark:text-primary-400 flex items-center gap-1">
                 ⚡ Regla aplicada: "{autoApplied.keyword}" → <strong>{autoApplied.categoryName}</strong>
               </p>
+            )}
+            {!autoApplied && aiLoading && (
+              <p className="mt-1 text-xs text-slate-400 flex items-center gap-1 animate-pulse">
+                🤖 Analizando con IA...
+              </p>
+            )}
+            {!autoApplied && !aiLoading && aiSuggestion && (
+              <div className="mt-1.5 flex items-center gap-2">
+                <p className="text-xs text-violet-600 dark:text-violet-400">
+                  🤖 IA sugiere: <strong>{aiSuggestion.icon} {aiSuggestion.name}</strong>
+                </p>
+                <button
+                  type="button"
+                  onClick={() => { setForm((f) => ({ ...f, categoryId: aiSuggestion.id })); setAiSuggestion(null); }}
+                  className="text-xs bg-violet-100 dark:bg-violet-500/20 text-violet-700 dark:text-violet-300 px-2 py-0.5 rounded-full hover:bg-violet-200 dark:hover:bg-violet-500/30 transition-colors"
+                >
+                  Aplicar
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setAiSuggestion(null)}
+                  className="text-xs text-slate-400 hover:text-slate-600 transition-colors"
+                >
+                  Ignorar
+                </button>
+              </div>
             )}
           </div>
           <div className="grid grid-cols-2 gap-3">
