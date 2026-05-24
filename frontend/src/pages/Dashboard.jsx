@@ -26,15 +26,17 @@ const StatCard = ({ label, value, sub, icon, color = 'default', trend }) => {
     amber:   'bg-amber-500/10 text-amber-500',
   };
   return (
-    <Card className="flex items-start gap-3 p-4">
-      <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-lg flex-shrink-0 ${bg[color]}`}>
+    <Card className="flex items-start gap-2 md:gap-3 p-3 md:p-4">
+      <div className={`w-8 h-8 md:w-10 md:h-10 rounded-xl flex items-center justify-center text-base md:text-lg flex-shrink-0 ${bg[color]}`}>
         {icon}
       </div>
       <div className="min-w-0 flex-1">
-        <p className="text-xs text-slate-400 mb-0.5 truncate">{label}</p>
-        <p className="text-lg md:text-xl font-bold text-slate-900 dark:text-white truncate">{value}</p>
+        <p className="text-[10px] md:text-xs text-slate-400 mb-0.5 truncate">{label}</p>
+        <p className="text-sm sm:text-base md:text-xl font-bold text-slate-900 dark:text-white leading-tight break-all">
+          {value}
+        </p>
         {sub && (
-          <p className={`text-xs mt-0.5 truncate ${
+          <p className={`text-[10px] md:text-xs mt-0.5 truncate ${
             trend === 'up' ? 'text-emerald-500' : trend === 'down' ? 'text-red-500' : 'text-slate-400'
           }`}>{sub}</p>
         )}
