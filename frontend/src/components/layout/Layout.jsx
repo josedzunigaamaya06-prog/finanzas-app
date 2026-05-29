@@ -26,7 +26,7 @@ export default function Layout() {
       {/* Overlay móvil */}
       {mobileOpen && (
         <div
-          className="fixed inset-0 bg-black/60 z-30 md:hidden"
+          className="fixed inset-0 bg-black/60 z-40 md:hidden"
           onClick={() => setMobileOpen(false)}
         />
       )}

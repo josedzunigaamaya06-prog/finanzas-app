@@ -82,7 +82,7 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
   return (
     <aside
       className={`
-        fixed left-0 top-0 z-40 flex flex-col
+        fixed left-0 top-0 z-50 flex flex-col
         bg-dark-900 border-r border-slate-700/50
         transition-all duration-300 ease-in-out overflow-hidden
         ${mobileOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
@@ -201,7 +201,10 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
       </nav>
 
       {/* Usuario */}
-      <div className="p-3 border-t border-slate-700/50 space-y-1 flex-shrink-0 pb-safe">
+      <div
+        className="p-3 border-t border-slate-700/50 space-y-1 flex-shrink-0"
+        style={{ paddingBottom: 'calc(max(0.75rem, env(safe-area-inset-bottom)) + 4rem)' }}
+      >
         <NavLink
           to="/profile"
           onClick={handleNavClick}
