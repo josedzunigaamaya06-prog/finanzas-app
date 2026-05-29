@@ -82,12 +82,15 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
   return (
     <aside
       className={`
-        fixed left-0 top-0 h-full z-40 flex flex-col
+        fixed left-0 top-0 z-40 flex flex-col
         bg-dark-900 border-r border-slate-700/50
-        transition-all duration-300 ease-in-out
+        transition-all duration-300 ease-in-out overflow-hidden
         ${mobileOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
       `}
-      style={{ width: isDesktop ? (collapsed ? '4rem' : '16rem') : '18rem' }}
+      style={{
+        width: isDesktop ? (collapsed ? '4rem' : '16rem') : '18rem',
+        height: '100dvh',
+      }}
     >
       {/* Logo */}
       <div className={`flex items-center h-16 px-4 border-b border-slate-700/50 flex-shrink-0 ${collapsed ? 'md:justify-center' : 'gap-3'}`}>
@@ -106,7 +109,7 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
       </div>
 
       {/* Navegación */}
-      <nav className="flex-1 py-3 px-2 overflow-y-auto space-y-0.5">
+      <nav className="flex-1 min-h-0 py-3 px-2 overflow-y-auto space-y-0.5">
         {navGroups.map((group) => {
           const isOpen    = open[group.id] ?? true;
           const hasActive = groupHasActive(group.items);
@@ -198,7 +201,7 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
       </nav>
 
       {/* Usuario */}
-      <div className="p-3 border-t border-slate-700/50 space-y-1 flex-shrink-0">
+      <div className="p-3 border-t border-slate-700/50 space-y-1 flex-shrink-0 pb-safe">
         <NavLink
           to="/profile"
           onClick={handleNavClick}
