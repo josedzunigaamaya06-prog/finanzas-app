@@ -20,5 +20,9 @@ router.use('/ai',              require('./ai'));
 router.use('/insights',        require('./insights'));
 router.use('/prediction',      require('./prediction'));
 router.use('/score',           require('./score'));
+router.use('/comparison',      require('./comparison'));
+router.use('/streak',          require('./streak'));
+router.use('/wrapped',         require('./wrapped'));
+router.use('/challenges',      require('./challenge'));
 
 module.exports = router;

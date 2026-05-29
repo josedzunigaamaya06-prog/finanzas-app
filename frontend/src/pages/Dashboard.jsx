@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { differenceInDays, parseISO, format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { dashboardAPI, remindersAPI } from '../services/api';
+import { dashboardAPI, remindersAPI, streakAPI } from '../services/api';
 import { formatCurrency, formatPercent, formatDate, priorityColor, priorityLabel } from '../utils/formatters';
 import Card from '../components/ui/Card';
 import Badge from '../components/ui/Badge';
@@ -49,6 +49,7 @@ export default function Dashboard() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [upcomingReminders, setUpcomingReminders] = useState([]);
+  const [streak, setStreak] = useState(null);
   const { user } = useAuthStore();
 
   useEffect(() => {
@@ -58,6 +59,9 @@ export default function Dashboard() {
       .finally(() => setLoading(false));
     remindersAPI.getUpcoming()
       .then((r) => setUpcomingReminders(r.data.data || []))
+      .catch(() => {});
+    streakAPI.get()
+      .then((r) => setStreak(r.data))
       .catch(() => {});
   }, []);
 
@@ -93,6 +97,27 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
+
+      {/* Racha de días */}
+      {streak && streak.currentStreak > 0 && (
+        <div className={`flex items-center gap-3 px-4 py-3 rounded-2xl border ${
+          streak.currentStreak >= 7
+            ? 'bg-amber-500/10 border-amber-500/30'
+            : 'bg-primary-500/10 border-primary-500/30'
+        }`}>
+          <span className="text-2xl">{streak.currentStreak >= 14 ? '🔥' : streak.currentStreak >= 7 ? '⚡' : '✨'}</span>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-bold text-slate-900 dark:text-white">
+              {streak.currentStreak} día{streak.currentStreak > 1 ? 's' : ''} registrando gastos
+            </p>
+            <p className="text-xs text-slate-400">Racha actual · Récord: {streak.maxStreak} días</p>
+          </div>
+          <div className="text-right flex-shrink-0">
+            <p className="text-xs text-slate-400">{streak.daysThisMonth} días</p>
+            <p className="text-xs text-slate-400">este mes</p>
+          </div>
+        </div>
+      )}
 
       {/* KPI Cards — 2 columnas en móvil, 4 en desktop */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">

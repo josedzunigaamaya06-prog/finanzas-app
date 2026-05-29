@@ -120,6 +120,25 @@ export const scoreAPI = {
   get: () => api.get('/score'),
 };
 
+export const comparisonAPI = {
+  get: (params) => api.get('/comparison', { params }),
+};
+
+export const streakAPI = {
+  get: () => api.get('/streak'),
+};
+
+export const wrappedAPI = {
+  get: (year) => api.get('/wrapped', { params: { year } }),
+};
+
+export const challengesAPI = {
+  getAll:       (params) => api.get('/challenges', { params }),
+  create:       (data)   => api.post('/challenges', data),
+  addProgress:  (id, amount) => api.post(`/challenges/${id}/progress`, { amount }),
+  remove:       (id)     => api.delete(`/challenges/${id}`),
+};
+
 export const aiAPI = {
   suggestCategory: (description) => api.post('/ai/suggest-category', { description }),
 };

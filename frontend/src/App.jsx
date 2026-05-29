@@ -21,6 +21,9 @@ import AutoRules from './pages/AutoRules';
 import Insights from './pages/Insights';
 import Prediction from './pages/Prediction';
 import Score from './pages/Score';
+import Comparison from './pages/Comparison';
+import Challenge from './pages/Challenge';
+import Wrapped from './pages/Wrapped';
 import LoadingSpinner from './components/ui/LoadingSpinner';
 
 const PrivateRoute = ({ children }) => {
@@ -65,6 +68,9 @@ export default function App() {
         <Route path="insights" element={<Insights />} />
         <Route path="prediction" element={<Prediction />} />
         <Route path="score"      element={<Score />} />
+        <Route path="comparison" element={<Comparison />} />
+        <Route path="challenge"  element={<Challenge />} />
+        <Route path="wrapped"    element={<Wrapped />} />
         <Route path="profile" element={<Profile />} />
       </Route>
       <Route path="*" element={<Navigate to="/dashboard" replace />} />

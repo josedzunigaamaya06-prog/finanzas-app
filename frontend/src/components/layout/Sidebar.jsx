@@ -16,6 +16,9 @@ const navItems = [
   { to: '/insights',        icon: '🔍', label: 'Análisis' },
   { to: '/prediction',      icon: '📈', label: 'Predicción' },
   { to: '/score',           icon: '🏆', label: 'Mi salud' },
+  { to: '/comparison',     icon: '📊', label: 'Comparativa' },
+  { to: '/challenge',      icon: '💪', label: 'Retos' },
+  { to: '/wrapped',        icon: '🎵', label: 'Wrapped' },
   { to: '/reports',         icon: '📈', label: 'Reportes' },
 ];
 

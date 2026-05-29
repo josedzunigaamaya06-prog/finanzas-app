@@ -1,0 +1,10 @@
+const express = require('express');
+const router  = express.Router();
+const ctrl    = require('../controllers/challengeController');
+const { authenticate } = require('../middleware/auth');
+router.use(authenticate);
+router.get('/',              ctrl.getAll);
+router.post('/',             ctrl.create);
+router.post('/:id/progress', ctrl.addProgress);
+router.delete('/:id',        ctrl.remove);
+module.exports = router;

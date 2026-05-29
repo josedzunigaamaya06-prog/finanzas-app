@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { reportsAPI } from '../services/api';
 import { formatCurrency, formatPercent, getMonthName } from '../utils/formatters';
+import { exportToExcel, exportToPDF, formatCurrencyRaw } from '../utils/exportUtils';
 import Card from '../components/ui/Card';
 import CategoryChart from '../components/charts/CategoryChart';
 import MonthlyChart from '../components/charts/MonthlyChart';
@@ -17,6 +18,68 @@ export default function Reports() {
   const [annualData, setAnnualData] = useState(null);
   const [loading, setLoading] = useState(false);
   const { user } = useAuthStore();
+
+  const handleExportMonthlyExcel = () => {
+    if (!monthlyData) return;
+    const rows = monthlyData.topExpenses.map((e) => ({
+      Fecha: new Date(e.date).toLocaleDateString('es-CO'),
+      Descripción: e.description,
+      Categoría: e.category?.name || '-',
+      Monto: Number(e.amount),
+      Tipo: e.type === 'FIXED' ? 'Fijo' : 'Variable',
+    }));
+    exportToExcel(rows, `reporte-mensual-${year}-${month}`, 'Gastos');
+    toast.success('Excel descargado');
+  };
+
+  const handleExportMonthlyPDF = () => {
+    if (!monthlyData) return;
+    exportToPDF({
+      title: `Reporte Mensual — ${getMonthName(month)} ${year}`,
+      subtitle: `Ingresos: ${formatCurrencyRaw(monthlyData.totals.totalIncome)}  |  Gastos: ${formatCurrencyRaw(monthlyData.totals.totalExpenses)}  |  Ahorro: ${formatCurrencyRaw(monthlyData.totals.netSavings)}`,
+      columns: ['Fecha', 'Descripción', 'Categoría', 'Monto', 'Tipo'],
+      rows: monthlyData.topExpenses.map((e) => [
+        new Date(e.date).toLocaleDateString('es-CO'),
+        e.description,
+        e.category?.name || '-',
+        formatCurrencyRaw(e.amount),
+        e.type === 'FIXED' ? 'Fijo' : 'Variable',
+      ]),
+      filename: `reporte-mensual-${year}-${month}`,
+    });
+    toast.success('PDF descargado');
+  };
+
+  const handleExportAnnualExcel = () => {
+    if (!annualData) return;
+    const rows = annualData.months.map((m) => ({
+      Mes: m.label,
+      Ingresos: m.totalIncome,
+      Gastos: m.totalExpenses,
+      Ahorro: m.netSavings,
+      'Tasa ahorro (%)': m.savingsRate?.toFixed(1),
+    }));
+    exportToExcel(rows, `reporte-anual-${year}`, 'Resumen Anual');
+    toast.success('Excel descargado');
+  };
+
+  const handleExportAnnualPDF = () => {
+    if (!annualData) return;
+    exportToPDF({
+      title: `Reporte Anual ${year}`,
+      subtitle: `Total ingresos: ${formatCurrencyRaw(annualData.annual.totalIncome)}  |  Total gastos: ${formatCurrencyRaw(annualData.annual.totalExpenses)}`,
+      columns: ['Mes', 'Ingresos', 'Gastos', 'Ahorro', 'Tasa %'],
+      rows: annualData.months.map((m) => [
+        m.label,
+        formatCurrencyRaw(m.totalIncome),
+        formatCurrencyRaw(m.totalExpenses),
+        formatCurrencyRaw(m.netSavings),
+        `${m.savingsRate?.toFixed(1)}%`,
+      ]),
+      filename: `reporte-anual-${year}`,
+    });
+    toast.success('PDF descargado');
+  };
 
   const loadMonthly = async () => {
     setLoading(true);
@@ -36,32 +99,55 @@ export default function Reports() {
 
   return (
     <div className="space-y-5 animate-fade-in">
-      <div className="flex items-center gap-4 flex-wrap">
-        <div className="flex bg-slate-100 dark:bg-slate-800 rounded-xl p-1">
-          {['monthly', 'annual'].map((t) => (
-            <button key={t} onClick={() => setTab(t)} className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${tab === t ? 'bg-white dark:bg-dark-800 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}>
-              {t === 'monthly' ? 'Mensual' : 'Anual'}
-            </button>
-          ))}
+      <div>
+        <h1 className="text-xl font-bold text-slate-900 dark:text-white">📈 Reportes</h1>
+        <p className="text-sm text-slate-400 mt-0.5">Análisis detallado de tus finanzas</p>
+      </div>
+
+      <div className="flex items-center gap-3 flex-wrap justify-between">
+        <div className="flex items-center gap-3 flex-wrap">
+          <div className="flex bg-slate-100 dark:bg-slate-800 rounded-xl p-1">
+            {['monthly', 'annual'].map((t) => (
+              <button key={t} onClick={() => setTab(t)} className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${tab === t ? 'bg-white dark:bg-dark-800 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}>
+                {t === 'monthly' ? 'Mensual' : 'Anual'}
+              </button>
+            ))}
+          </div>
+
+          {tab === 'monthly' && (
+            <div className="flex gap-2">
+              <select className="input-field w-auto" value={month} onChange={(e) => setMonth(parseInt(e.target.value))}>
+                {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => (
+                  <option key={m} value={m}>{getMonthName(m)}</option>
+                ))}
+              </select>
+              <select className="input-field w-auto" value={year} onChange={(e) => setYear(parseInt(e.target.value))}>
+                {[now.getFullYear() - 2, now.getFullYear() - 1, now.getFullYear()].map((y) => <option key={y} value={y}>{y}</option>)}
+              </select>
+            </div>
+          )}
+          {tab === 'annual' && (
+            <select className="input-field w-auto" value={year} onChange={(e) => setYear(parseInt(e.target.value))}>
+              {[now.getFullYear() - 2, now.getFullYear() - 1, now.getFullYear()].map((y) => <option key={y} value={y}>{y}</option>)}
+            </select>
+          )}
         </div>
 
-        {tab === 'monthly' && (
-          <div className="flex gap-2">
-            <select className="input-field w-auto" value={month} onChange={(e) => setMonth(parseInt(e.target.value))}>
-              {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => (
-                <option key={m} value={m}>{getMonthName(m)}</option>
-              ))}
-            </select>
-            <select className="input-field w-auto" value={year} onChange={(e) => setYear(parseInt(e.target.value))}>
-              {[year - 2, year - 1, year].map((y) => <option key={y} value={y}>{y}</option>)}
-            </select>
-          </div>
-        )}
-        {tab === 'annual' && (
-          <select className="input-field w-auto" value={year} onChange={(e) => setYear(parseInt(e.target.value))}>
-            {[year - 2, year - 1, year].map((y) => <option key={y} value={y}>{y}</option>)}
-          </select>
-        )}
+        {/* Botones de exportación */}
+        <div className="flex gap-2">
+          <button
+            onClick={tab === 'monthly' ? handleExportMonthlyExcel : handleExportAnnualExcel}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20 transition-colors border border-emerald-500/20"
+          >
+            <span>📊</span> Excel
+          </button>
+          <button
+            onClick={tab === 'monthly' ? handleExportMonthlyPDF : handleExportAnnualPDF}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium bg-red-500/10 text-red-600 dark:text-red-400 hover:bg-red-500/20 transition-colors border border-red-500/20"
+          >
+            <span>📄</span> PDF
+          </button>
+        </div>
       </div>
 
       {loading && <div className="flex justify-center py-20"><LoadingSpinner size="lg" /></div>}

@@ -31,6 +31,7 @@ model User {
   reminders       Reminder[]
   autoRules        AutoRule[]
   categoryPatterns CategoryPattern[]
+  challenges       Challenge[]
 
   @@map("users")
 }
@@ -388,6 +389,27 @@ model CategoryPattern {
   @@unique([userId, keyword, categoryId])
   @@map("category_patterns")
   @@index([userId, keyword])
+}
+
+// ─── RETO MENSUAL DE AHORRO ─────────────────────────────────────────────────
+
+model Challenge {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title         String
+  description   String?
+  targetAmount  Decimal  @db.Decimal(15, 2)
+  savedAmount   Decimal  @db.Decimal(15, 2) @default(0)
+  month         Int
+  year          Int
+  isCompleted   Boolean  @default(false)
+  emoji         String?  @default("🎯")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@map("challenges")
+  @@index([userId, month, year])
 }
 
 // ─── REGLAS AUTOMÁTICAS ─────────────────────────────────────────────────────
