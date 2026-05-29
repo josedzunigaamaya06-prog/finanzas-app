@@ -4,6 +4,7 @@ import Sidebar from './Sidebar';
 import Header from './Header';
 import BottomNav from './BottomNav';
 import OnboardingModal from '../OnboardingModal';
+import PWAUpdatePrompt from '../PWAUpdatePrompt';
 
 export default function Layout() {
   const [collapsed, setCollapsed]   = useState(false);
@@ -56,6 +57,9 @@ export default function Layout() {
 
       {/* Guía de inicio para nuevos usuarios */}
       <OnboardingModal />
+
+      {/* Notificación de actualización PWA */}
+      <PWAUpdatePrompt />
     </div>
   );
 }
