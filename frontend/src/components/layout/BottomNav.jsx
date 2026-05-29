@@ -10,7 +10,8 @@ const items = [
 
 export default function BottomNav() {
   return (
-    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-dark-900/95 backdrop-blur-md border-t border-slate-700/50 flex items-stretch justify-around px-2 h-[60px] safe-bottom">
+    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-dark-900/95 backdrop-blur-md border-t border-slate-700/50 flex flex-col pb-safe">
+    <div className="flex items-stretch justify-around px-2 h-[60px]">
       {items.map((item) => (
         <NavLink
           key={item.to}
@@ -35,6 +36,7 @@ export default function BottomNav() {
           )}
         </NavLink>
       ))}
+    </div>
     </nav>
   );
 }

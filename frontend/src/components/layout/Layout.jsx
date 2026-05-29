@@ -46,7 +46,7 @@ export default function Layout() {
         style={{ marginLeft: contentMargin }}
       >
         <Header onMenuClick={() => setMobileOpen(true)} />
-        <main className="p-3 sm:p-4 md:p-6 min-h-[calc(100vh-4rem)] pb-20 md:pb-8">
+        <main className="p-3 sm:p-4 md:p-6 min-h-[calc(100vh-4rem)]" style={{ paddingBottom: 'calc(5rem + env(safe-area-inset-bottom, 0px))' }}>
           <Outlet />
         </main>
       </div>

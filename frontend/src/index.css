@@ -2,10 +2,19 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Safe area para iOS (home indicator) */
-@supports (padding-bottom: env(safe-area-inset-bottom)) {
+/* Safe areas para iOS (Dynamic Island, notch, home indicator) */
+@supports (padding-top: env(safe-area-inset-top)) {
+  .pt-safe {
+    padding-top: env(safe-area-inset-top);
+  }
   .pb-safe {
-    padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+    padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+  }
+  .mt-safe {
+    margin-top: env(safe-area-inset-top);
+  }
+  .h-safe-top {
+    height: env(safe-area-inset-top);
   }
 }
 

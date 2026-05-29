@@ -93,7 +93,7 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
       }}
     >
       {/* Logo */}
-      <div className={`flex items-center h-16 px-4 border-b border-slate-700/50 flex-shrink-0 ${collapsed ? 'md:justify-center' : 'gap-3'}`}>
+      <div className={`flex items-center px-4 border-b border-slate-700/50 flex-shrink-0 pt-safe ${collapsed ? 'md:justify-center' : 'gap-3'}`} style={{ minHeight: '4rem' }}>
         <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary-500 to-violet-600 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
           F
         </div>

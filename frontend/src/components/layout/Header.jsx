@@ -22,7 +22,10 @@ export default function Header({ onMenuClick }) {
   const page = pageTitles[pathname] || { title: 'FinanzasPro', subtitle: '' };
 
   return (
-    <header className="h-14 md:h-16 flex items-center justify-between px-3 sm:px-4 md:px-6 bg-white/90 dark:bg-dark-800/90 backdrop-blur-md border-b border-slate-100 dark:border-slate-700/50 sticky top-0 z-30 shadow-sm shadow-slate-100/50 dark:shadow-none">
+    <header
+      className="flex flex-col bg-white/90 dark:bg-dark-800/90 backdrop-blur-md border-b border-slate-100 dark:border-slate-700/50 sticky top-0 z-30 shadow-sm shadow-slate-100/50 dark:shadow-none pt-safe"
+    >
+    <div className="h-14 md:h-16 flex items-center justify-between px-3 sm:px-4 md:px-6">
 
       {/* Izquierda: hamburger (móvil) + título */}
       <div className="flex items-center gap-2.5 min-w-0">
@@ -70,6 +73,7 @@ export default function Header({ onMenuClick }) {
           {isDark ? '☀️' : '🌙'}
         </button>
       </div>
+    </div>
     </header>
   );
 }
