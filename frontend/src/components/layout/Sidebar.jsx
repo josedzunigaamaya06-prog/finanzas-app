@@ -1,15 +1,19 @@
-import { NavLink, useNavigate } from 'react-router-dom';
+import { useState } from 'react';
+import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import useAuthStore from '../../store/authStore';
 import toast from 'react-hot-toast';
 
 const navGroups = [
   {
+    id: 'general',
     items: [
       { to: '/dashboard', icon: '⊞', label: 'Dashboard' },
     ],
   },
   {
+    id: 'dinero',
     label: 'Dinero',
+    icon: '💳',
     items: [
       { to: '/wallets',  icon: '👛', label: 'Billeteras' },
       { to: '/incomes',  icon: '↑',  label: 'Ingresos' },
@@ -18,16 +22,20 @@ const navGroups = [
     ],
   },
   {
+    id: 'planificacion',
     label: 'Planificación',
+    icon: '📅',
     items: [
-      { to: '/budgets',  icon: '📊', label: 'Presupuestos' },
-      { to: '/goals',    icon: '🎯', label: 'Metas' },
-      { to: '/challenge',icon: '💪', label: 'Retos' },
-      { to: '/calendar', icon: '📅', label: 'Calendario' },
+      { to: '/budgets',   icon: '📊', label: 'Presupuestos' },
+      { to: '/goals',     icon: '🎯', label: 'Metas' },
+      { to: '/challenge', icon: '💪', label: 'Retos' },
+      { to: '/calendar',  icon: '📅', label: 'Calendario' },
     ],
   },
   {
+    id: 'inteligencia',
     label: 'Inteligencia',
+    icon: '🤖',
     items: [
       { to: '/recommendations', icon: '💡', label: 'Sugerencias' },
       { to: '/auto-rules',      icon: '⚡', label: 'Reglas auto' },
@@ -36,7 +44,9 @@ const navGroups = [
     ],
   },
   {
+    id: 'reportes',
     label: 'Reportes',
+    icon: '📋',
     items: [
       { to: '/reports',    icon: '📋', label: 'Reportes' },
       { to: '/comparison', icon: '↔️', label: 'Comparativa' },
@@ -46,9 +56,16 @@ const navGroups = [
   },
 ];
 
+// Qué grupos empiezan abiertos
+const DEFAULT_OPEN = { general: true, dinero: true, planificacion: true, inteligencia: false, reportes: false };
+
 export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose, isDesktop }) {
   const { user, logout } = useAuthStore();
-  const navigate = useNavigate();
+  const navigate  = useNavigate();
+  const location  = useLocation();
+  const [open, setOpen] = useState(DEFAULT_OPEN);
+
+  const toggle = (id) => setOpen((prev) => ({ ...prev, [id]: !prev[id] }));
 
   const handleLogout = () => {
     logout();
@@ -57,9 +74,10 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
     onMobileClose?.();
   };
 
-  const handleNavClick = () => {
-    onMobileClose?.();
-  };
+  const handleNavClick = () => onMobileClose?.();
+
+  // ¿Algún ítem del grupo está activo?
+  const groupHasActive = (items) => items.some((i) => location.pathname.startsWith(i.to));
 
   return (
     <aside
@@ -88,42 +106,95 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
       </div>
 
       {/* Navegación */}
-      <nav className="flex-1 py-3 px-2 overflow-y-auto space-y-4">
-        {navGroups.map((group, gi) => (
-          <div key={gi}>
-            {/* Etiqueta de sección */}
-            {group.label && !collapsed && (
-              <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest px-3 mb-1">
-                {group.label}
-              </p>
-            )}
-            {group.label && collapsed && (
-              <div className="mx-3 h-px bg-slate-700/50 mb-1" />
-            )}
+      <nav className="flex-1 py-3 px-2 overflow-y-auto space-y-0.5">
+        {navGroups.map((group) => {
+          const isOpen    = open[group.id] ?? true;
+          const hasActive = groupHasActive(group.items);
 
-            <div className="space-y-0.5">
-              {group.items.map((item) => (
-                <NavLink
-                  key={item.to}
-                  to={item.to}
-                  onClick={handleNavClick}
-                  title={collapsed ? item.label : ''}
-                  className={({ isActive }) =>
-                    `flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200
-                    ${isActive
-                      ? 'bg-primary-500/20 text-primary-400 border border-primary-500/30'
-                      : 'text-slate-400 hover:text-white hover:bg-slate-700/50'
+          /* Grupo sin encabezado (Dashboard) */
+          if (!group.label) {
+            return (
+              <div key={group.id} className="mb-1">
+                {group.items.map((item) => (
+                  <NavLink
+                    key={item.to}
+                    to={item.to}
+                    onClick={handleNavClick}
+                    title={collapsed ? item.label : ''}
+                    className={({ isActive }) =>
+                      `flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200
+                      ${isActive
+                        ? 'bg-primary-500/20 text-primary-400 border border-primary-500/30'
+                        : 'text-slate-400 hover:text-white hover:bg-slate-700/50'
+                      }
+                      ${collapsed ? 'md:justify-center' : ''}`
                     }
-                    ${collapsed ? 'md:justify-center' : ''}`
-                  }
+                  >
+                    <span className="text-base flex-shrink-0">{item.icon}</span>
+                    <span className={collapsed ? 'md:hidden' : ''}>{item.label}</span>
+                  </NavLink>
+                ))}
+              </div>
+            );
+          }
+
+          /* Grupos con encabezado desplegable */
+          return (
+            <div key={group.id} className="mb-1">
+              {/* Encabezado del grupo */}
+              {collapsed ? (
+                /* Modo colapsado: solo línea separadora */
+                <div className="mx-3 h-px bg-slate-700/50 my-2" />
+              ) : (
+                <button
+                  onClick={() => toggle(group.id)}
+                  className={`w-full flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-widest transition-colors ${
+                    hasActive && !isOpen
+                      ? 'text-primary-400'
+                      : 'text-slate-500 hover:text-slate-300'
+                  }`}
                 >
-                  <span className="text-base flex-shrink-0">{item.icon}</span>
-                  <span className={collapsed ? 'md:hidden' : ''}>{item.label}</span>
-                </NavLink>
-              ))}
+                  <span className="text-sm">{group.icon}</span>
+                  <span className="flex-1 text-left">{group.label}</span>
+                  <span
+                    className="text-slate-600 transition-transform duration-200"
+                    style={{ transform: isOpen ? 'rotate(0deg)' : 'rotate(-90deg)' }}
+                  >
+                    ▾
+                  </span>
+                </button>
+              )}
+
+              {/* Ítems del grupo */}
+              <div
+                className="overflow-hidden transition-all duration-300 ease-in-out"
+                style={{ maxHeight: (collapsed || isOpen) ? '400px' : '0px', opacity: (collapsed || isOpen) ? 1 : 0 }}
+              >
+                <div className={`space-y-0.5 ${collapsed ? '' : 'ml-1'}`}>
+                  {group.items.map((item) => (
+                    <NavLink
+                      key={item.to}
+                      to={item.to}
+                      onClick={handleNavClick}
+                      title={collapsed ? item.label : ''}
+                      className={({ isActive }) =>
+                        `flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200
+                        ${isActive
+                          ? 'bg-primary-500/20 text-primary-400 border border-primary-500/30'
+                          : 'text-slate-400 hover:text-white hover:bg-slate-700/50'
+                        }
+                        ${collapsed ? 'md:justify-center' : ''}`
+                      }
+                    >
+                      <span className="text-base flex-shrink-0">{item.icon}</span>
+                      <span className={collapsed ? 'md:hidden' : ''}>{item.label}</span>
+                    </NavLink>
+                  ))}
+                </div>
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </nav>
 
       {/* Usuario */}
