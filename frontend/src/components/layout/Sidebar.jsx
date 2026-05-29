@@ -2,24 +2,48 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import useAuthStore from '../../store/authStore';
 import toast from 'react-hot-toast';
 
-const navItems = [
-  { to: '/dashboard',       icon: '⊞', label: 'Dashboard' },
-  { to: '/wallets',         icon: '👛', label: 'Billeteras' },
-  { to: '/incomes',         icon: '↑',  label: 'Ingresos' },
-  { to: '/expenses',        icon: '↓',  label: 'Gastos' },
-  { to: '/debts',           icon: '🏦', label: 'Deudas' },
-  { to: '/calendar',        icon: '📅', label: 'Calendario' },
-  { to: '/goals',           icon: '🎯', label: 'Metas' },
-  { to: '/budgets',         icon: '📊', label: 'Presupuestos' },
-  { to: '/recommendations', icon: '💡', label: 'Sugerencias' },
-  { to: '/auto-rules',      icon: '⚡', label: 'Reglas auto' },
-  { to: '/insights',        icon: '🔍', label: 'Análisis' },
-  { to: '/prediction',      icon: '📈', label: 'Predicción' },
-  { to: '/score',           icon: '🏆', label: 'Mi salud' },
-  { to: '/comparison',     icon: '📊', label: 'Comparativa' },
-  { to: '/challenge',      icon: '💪', label: 'Retos' },
-  { to: '/wrapped',        icon: '🎵', label: 'Wrapped' },
-  { to: '/reports',         icon: '📈', label: 'Reportes' },
+const navGroups = [
+  {
+    items: [
+      { to: '/dashboard', icon: '⊞', label: 'Dashboard' },
+    ],
+  },
+  {
+    label: 'Dinero',
+    items: [
+      { to: '/wallets',  icon: '👛', label: 'Billeteras' },
+      { to: '/incomes',  icon: '↑',  label: 'Ingresos' },
+      { to: '/expenses', icon: '↓',  label: 'Gastos' },
+      { to: '/debts',    icon: '🏦', label: 'Deudas' },
+    ],
+  },
+  {
+    label: 'Planificación',
+    items: [
+      { to: '/budgets',  icon: '📊', label: 'Presupuestos' },
+      { to: '/goals',    icon: '🎯', label: 'Metas' },
+      { to: '/challenge',icon: '💪', label: 'Retos' },
+      { to: '/calendar', icon: '📅', label: 'Calendario' },
+    ],
+  },
+  {
+    label: 'Inteligencia',
+    items: [
+      { to: '/recommendations', icon: '💡', label: 'Sugerencias' },
+      { to: '/auto-rules',      icon: '⚡', label: 'Reglas auto' },
+      { to: '/insights',        icon: '🔍', label: 'Análisis' },
+      { to: '/prediction',      icon: '📈', label: 'Predicción' },
+    ],
+  },
+  {
+    label: 'Reportes',
+    items: [
+      { to: '/reports',    icon: '📋', label: 'Reportes' },
+      { to: '/comparison', icon: '↔️', label: 'Comparativa' },
+      { to: '/score',      icon: '🏆', label: 'Mi salud' },
+      { to: '/wrapped',    icon: '🎵', label: 'Wrapped' },
+    ],
+  },
 ];
 
 export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose, isDesktop }) {
@@ -55,7 +79,6 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
         <span className={`font-bold text-white text-lg ${collapsed ? 'md:hidden' : ''}`}>
           FinanzasPro
         </span>
-        {/* Cerrar en móvil */}
         <button
           onClick={onMobileClose}
           className="md:hidden ml-auto w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-white hover:bg-slate-700/50 transition-colors"
@@ -65,25 +88,41 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
       </div>
 
       {/* Navegación */}
-      <nav className="flex-1 py-4 px-2 space-y-1 overflow-y-auto">
-        {navItems.map((item) => (
-          <NavLink
-            key={item.to}
-            to={item.to}
-            onClick={handleNavClick}
-            title={collapsed ? item.label : ''}
-            className={({ isActive }) =>
-              `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200
-              ${isActive
-                ? 'bg-primary-500/20 text-primary-400 border border-primary-500/30'
-                : 'text-slate-400 hover:text-white hover:bg-slate-700/50'
-              }
-              ${collapsed ? 'md:justify-center' : ''}`
-            }
-          >
-            <span className="text-base flex-shrink-0">{item.icon}</span>
-            <span className={collapsed ? 'md:hidden' : ''}>{item.label}</span>
-          </NavLink>
+      <nav className="flex-1 py-3 px-2 overflow-y-auto space-y-4">
+        {navGroups.map((group, gi) => (
+          <div key={gi}>
+            {/* Etiqueta de sección */}
+            {group.label && !collapsed && (
+              <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest px-3 mb-1">
+                {group.label}
+              </p>
+            )}
+            {group.label && collapsed && (
+              <div className="mx-3 h-px bg-slate-700/50 mb-1" />
+            )}
+
+            <div className="space-y-0.5">
+              {group.items.map((item) => (
+                <NavLink
+                  key={item.to}
+                  to={item.to}
+                  onClick={handleNavClick}
+                  title={collapsed ? item.label : ''}
+                  className={({ isActive }) =>
+                    `flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200
+                    ${isActive
+                      ? 'bg-primary-500/20 text-primary-400 border border-primary-500/30'
+                      : 'text-slate-400 hover:text-white hover:bg-slate-700/50'
+                    }
+                    ${collapsed ? 'md:justify-center' : ''}`
+                  }
+                >
+                  <span className="text-base flex-shrink-0">{item.icon}</span>
+                  <span className={collapsed ? 'md:hidden' : ''}>{item.label}</span>
+                </NavLink>
+              ))}
+            </div>
+          </div>
         ))}
       </nav>
 
