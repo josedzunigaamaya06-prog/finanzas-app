@@ -13,35 +13,44 @@ import LoadingSpinner from '../components/ui/LoadingSpinner';
 import useAuthStore from '../store/authStore';
 
 const gradeColors = {
-  A: 'text-emerald-400', B: 'text-blue-400',
-  C: 'text-amber-400',   D: 'text-orange-400', F: 'text-red-400',
+  A: { text: '#10b981', bg: 'rgba(16,185,129,0.1)' },
+  B: { text: '#3b82f6', bg: 'rgba(59,130,246,0.1)' },
+  C: { text: '#f59e0b', bg: 'rgba(245,158,11,0.1)' },
+  D: { text: '#f97316', bg: 'rgba(249,115,22,0.1)' },
+  F: { text: '#ef4444', bg: 'rgba(239,68,68,0.1)' },
 };
 
-const StatCard = ({ label, value, sub, icon, color = 'default', trend }) => {
-  const bg = {
-    default: 'bg-slate-100 dark:bg-slate-700/50 text-slate-500',
-    green:   'bg-emerald-500/10 text-emerald-500',
-    red:     'bg-red-500/10 text-red-500',
-    blue:    'bg-primary-500/10 text-primary-500',
-    amber:   'bg-amber-500/10 text-amber-500',
-  };
+const statAccent = {
+  green: { icon: '#10b981', iconBg: 'rgba(16,185,129,0.1)', value: '#10b981' },
+  red:   { icon: '#ef4444', iconBg: 'rgba(239,68,68,0.1)',  value: '#ef4444' },
+  blue:  { icon: '#6366f1', iconBg: 'rgba(99,102,241,0.1)', value: '#1e293b' },
+  amber: { icon: '#f59e0b', iconBg: 'rgba(245,158,11,0.1)', value: '#1e293b' },
+};
+
+const StatCard = ({ label, value, sub, icon, color = 'blue', trend }) => {
+  const accent = statAccent[color] || statAccent.blue;
   return (
-    <Card className="flex items-start gap-2 md:gap-3 p-3 md:p-4">
-      <div className={`w-8 h-8 md:w-10 md:h-10 rounded-xl flex items-center justify-center text-base md:text-lg flex-shrink-0 ${bg[color]}`}>
-        {icon}
+    <div className="card-hover p-4 md:p-5">
+      <div className="flex items-start justify-between mb-3">
+        <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wide">{label}</p>
+        <div className="w-8 h-8 rounded-xl flex items-center justify-center text-sm flex-shrink-0"
+          style={{ background: accent.iconBg, color: accent.icon }}>
+          {icon}
+        </div>
       </div>
-      <div className="min-w-0 flex-1">
-        <p className="text-[10px] md:text-xs text-slate-400 mb-0.5 truncate">{label}</p>
-        <p className="text-sm sm:text-base md:text-xl font-bold text-slate-900 dark:text-white leading-tight break-all">
-          {value}
+      <p className="text-xl md:text-2xl font-bold leading-tight text-money"
+        style={{ color: color === 'green' ? accent.value : color === 'red' ? accent.value : '#0f172a' }}
+      >
+        {value}
+      </p>
+      {sub && (
+        <p className={`text-xs mt-1.5 font-medium ${
+          trend === 'up' ? 'text-primary-500' : trend === 'down' ? 'text-red-500' : 'text-slate-400'
+        }`}>
+          {trend === 'up' ? '↑ ' : trend === 'down' ? '↓ ' : ''}{sub}
         </p>
-        {sub && (
-          <p className={`text-[10px] md:text-xs mt-0.5 truncate ${
-            trend === 'up' ? 'text-emerald-500' : trend === 'down' ? 'text-red-500' : 'text-slate-400'
-          }`}>{sub}</p>
-        )}
-      </div>
-    </Card>
+      )}
+    </div>
   );
 };
 
@@ -74,28 +83,31 @@ export default function Dashboard() {
     <div className="space-y-4 md:space-y-6 animate-fade-in">
 
       {/* Bienvenida + Score */}
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex items-center justify-between gap-4">
         <div className="min-w-0">
-          <h2 className="text-lg md:text-xl font-bold text-slate-900 dark:text-white">
-            Hola, {user?.name?.split(' ')[0]} 👋
+          <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wide mb-0.5">
+            {new Date().toLocaleDateString('es-CO', { weekday: 'long', day: 'numeric', month: 'long' })}
+          </p>
+          <h2 className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
+            Hola, {user?.name?.split(' ')[0]}
           </h2>
-          <p className="text-xs md:text-sm text-slate-400">Resumen de este mes</p>
         </div>
-        <div className="flex items-center gap-3 bg-white dark:bg-dark-800 border border-slate-100 dark:border-slate-700/50 rounded-2xl px-3 py-2 md:px-4 md:py-3 flex-shrink-0">
-          <div className="text-center">
-            <p className={`text-2xl md:text-3xl font-black ${gradeColors[financialScore?.grade] || 'text-slate-400'}`}>
-              {financialScore?.grade || '-'}
-            </p>
-            <p className="text-xs text-slate-400">Score</p>
+        {financialScore && (
+          <div className="flex items-center gap-1 flex-shrink-0 card px-3 py-2.5">
+            <div className="text-center px-2">
+              <p className="text-2xl font-black leading-none"
+                style={{ color: gradeColors[financialScore.grade]?.text || '#94a3b8' }}>
+                {financialScore.grade || '—'}
+              </p>
+              <p className="text-[10px] text-slate-400 mt-0.5 font-medium">GRADE</p>
+            </div>
+            <div className="w-px h-8 bg-surface-200 mx-1" />
+            <div className="text-center px-2">
+              <p className="text-xl font-bold text-slate-900 dark:text-white leading-none">{financialScore.score || 0}</p>
+              <p className="text-[10px] text-slate-400 mt-0.5 font-medium">/ 100</p>
+            </div>
           </div>
-          <div className="w-px h-7 bg-slate-200 dark:bg-slate-700" />
-          <div className="text-center">
-            <p className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white">
-              {financialScore?.score || 0}
-            </p>
-            <p className="text-xs text-slate-400">/ 100</p>
-          </div>
-        </div>
+        )}
       </div>
 
       {/* Racha de días */}

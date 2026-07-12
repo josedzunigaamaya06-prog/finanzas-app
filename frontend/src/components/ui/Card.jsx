@@ -1,8 +1,8 @@
-export default function Card({ children, className = '', hover = false, onClick }) {
+export default function Card({ children, className = '', hover = false, onClick, padding = 'p-5 md:p-6' }) {
   return (
     <div
       onClick={onClick}
-      className={`card p-6 animate-fade-in ${hover ? 'hover:shadow-md hover:border-primary-500/20 cursor-pointer transition-all duration-200' : ''} ${className}`}
+      className={`${hover ? 'card-hover' : 'card'} ${padding} animate-fade-in ${onClick ? 'cursor-pointer' : ''} ${className}`}
     >
       {children}
     </div>

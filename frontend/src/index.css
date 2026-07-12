@@ -2,73 +2,151 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Safe areas para iOS (Dynamic Island, notch, home indicator) */
+/* ─── iOS Safe Areas ──────────────────────────────────────────────────────── */
 @supports (padding-top: env(safe-area-inset-top)) {
-  .pt-safe {
-    padding-top: env(safe-area-inset-top);
-  }
-  .pb-safe {
-    padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
-  }
-  .mt-safe {
-    margin-top: env(safe-area-inset-top);
-  }
-  .h-safe-top {
-    height: env(safe-area-inset-top);
-  }
+  .pt-safe { padding-top: env(safe-area-inset-top); }
+  .pb-safe { padding-bottom: max(0.5rem, env(safe-area-inset-bottom)); }
+  .mt-safe { margin-top: env(safe-area-inset-top); }
+  .h-safe-top { height: env(safe-area-inset-top); }
 }
 
+/* ─── Base ────────────────────────────────────────────────────────────────── */
 @layer base {
-  * {
-    @apply border-slate-200 dark:border-slate-700;
-  }
+  @import url('https://rsms.me/inter/inter.css');
+
+  *, *::before, *::after { box-sizing: border-box; }
+
+  html { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+
   body {
-    @apply bg-slate-50 text-slate-900 dark:bg-dark-900 dark:text-slate-100 antialiased;
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    @apply bg-surface-50 text-slate-900 dark:bg-dark-900 dark:text-slate-100;
+    font-family: 'Inter var', 'Inter', system-ui, -apple-system, sans-serif;
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
   }
-  ::-webkit-scrollbar {
-    @apply w-1.5 h-1.5;
-  }
-  ::-webkit-scrollbar-track {
-    @apply bg-transparent;
-  }
-  ::-webkit-scrollbar-thumb {
-    @apply bg-slate-300 dark:bg-slate-600 rounded-full;
-  }
-  ::-webkit-scrollbar-thumb:hover {
-    @apply bg-slate-400 dark:bg-slate-500;
-  }
+
+  /* Scrollbar refinada */
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { @apply bg-slate-200 dark:bg-slate-700 rounded-full; }
+  ::-webkit-scrollbar-thumb:hover { @apply bg-slate-300 dark:bg-slate-600; }
+
+  h1, h2, h3, h4, h5, h6 { font-feature-settings: 'ss01'; }
 }
 
+/* ─── Components ──────────────────────────────────────────────────────────── */
 @layer components {
+
+  /* Cards */
   .card {
-    @apply bg-white dark:bg-dark-800 rounded-2xl border border-slate-100 dark:border-slate-700/50 shadow-sm;
+    @apply bg-white dark:bg-dark-800 rounded-2xl border border-surface-200 dark:border-slate-700/50;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.03);
   }
+  .card-hover {
+    @apply card transition-all duration-200 hover:-translate-y-0.5;
+    &:hover { box-shadow: 0 6px 20px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.04); }
+  }
+
+  /* Inputs */
+  .input-field {
+    @apply w-full bg-white dark:bg-dark-850 border border-surface-200 dark:border-slate-600/60
+           text-slate-900 dark:text-slate-100 rounded-xl px-4 py-2.5 text-sm
+           placeholder-slate-400 dark:placeholder-slate-500
+           focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500
+           transition-all duration-150;
+  }
+  .input-label {
+    @apply block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1.5;
+  }
+
+  /* Buttons */
   .btn-primary {
-    @apply bg-primary-500 hover:bg-primary-600 text-white font-medium px-4 py-2 rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500/50 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply inline-flex items-center justify-center gap-2
+           bg-primary-500 hover:bg-primary-600 active:bg-primary-700
+           text-white font-semibold rounded-xl
+           transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-primary-500/30
+           active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100;
+    box-shadow: 0 1px 3px rgba(16,185,129,0.3), 0 0 0 0 rgba(16,185,129,0);
+  }
+  .btn-primary:hover {
+    box-shadow: 0 4px 12px rgba(16,185,129,0.35);
   }
   .btn-secondary {
-    @apply bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 font-medium px-4 py-2 rounded-xl transition-all duration-200 focus:outline-none active:scale-95;
+    @apply inline-flex items-center justify-center gap-2
+           bg-white dark:bg-slate-700/50 hover:bg-surface-100 dark:hover:bg-slate-700
+           border border-surface-200 dark:border-slate-600/50
+           text-slate-700 dark:text-slate-200 font-semibold rounded-xl
+           transition-all duration-150 focus:outline-none
+           active:scale-[0.98] disabled:opacity-50;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
   }
-  .input-field {
-    @apply w-full bg-slate-50 dark:bg-dark-850 border border-slate-200 dark:border-slate-600 text-slate-900 dark:text-slate-100 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500 placeholder-slate-400 dark:placeholder-slate-500 transition-all duration-200;
+  .btn-danger {
+    @apply inline-flex items-center justify-center gap-2
+           bg-red-500 hover:bg-red-600 active:bg-red-700
+           text-white font-semibold rounded-xl
+           transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-red-500/30
+           active:scale-[0.98] disabled:opacity-50;
   }
-  .stat-positive {
-    @apply text-emerald-500 dark:text-emerald-400;
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2
+           hover:bg-surface-100 dark:hover:bg-slate-700/50
+           text-slate-600 dark:text-slate-300 font-medium rounded-xl
+           transition-all duration-150 focus:outline-none active:scale-[0.98];
   }
-  .stat-negative {
-    @apply text-red-500 dark:text-red-400;
-  }
+
+  /* Badges */
   .badge {
-    @apply inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium;
+    @apply inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold;
+  }
+  .badge-green  { @apply badge bg-primary-500/10 text-primary-600 dark:text-primary-400; }
+  .badge-red    { @apply badge bg-red-500/10 text-red-600 dark:text-red-400; }
+  .badge-amber  { @apply badge bg-amber-500/10 text-amber-600 dark:text-amber-400; }
+  .badge-blue   { @apply badge bg-blue-500/10 text-blue-600 dark:text-blue-400; }
+  .badge-slate  { @apply badge bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300; }
+
+  /* Stat tendencias */
+  .trend-up   { @apply text-primary-600 dark:text-primary-400; }
+  .trend-down { @apply text-red-500 dark:text-red-400; }
+  .trend-flat { @apply text-slate-400; }
+
+  /* Sidebar nav item */
+  .nav-item {
+    @apply relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium
+           text-sidebar-text transition-all duration-150 cursor-pointer select-none;
+  }
+  .nav-item:hover { background: rgba(139,147,167,0.1); color: #e2e5ed; }
+  .nav-item.active {
+    background: rgba(16,185,129,0.1);
+    color: #34d399;
+  }
+  .nav-item.active::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 25%;
+    height: 50%;
+    width: 3px;
+    border-radius: 0 3px 3px 0;
+    background: #10b981;
   }
 }
 
+/* ─── Utilities ───────────────────────────────────────────────────────────── */
 @layer utilities {
-  .text-gradient {
-    @apply bg-gradient-to-r from-primary-500 to-violet-500 bg-clip-text text-transparent;
+  .text-gradient-green {
+    @apply bg-gradient-to-r from-primary-400 to-emerald-300 bg-clip-text text-transparent;
+  }
+  .text-money {
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
   }
   .glass {
-    @apply backdrop-blur-sm bg-white/80 dark:bg-dark-800/80;
+    backdrop-filter: blur(12px) saturate(180%);
+    @apply bg-white/80 dark:bg-dark-800/80;
   }
+  .sidebar-glass {
+    backdrop-filter: blur(20px);
+    background: rgba(17, 19, 24, 0.95);
+  }
+  .ring-card { @apply ring-1 ring-black/[0.04] dark:ring-white/[0.04]; }
+  .divider   { @apply h-px bg-surface-200 dark:bg-slate-700/50 my-1; }
 }

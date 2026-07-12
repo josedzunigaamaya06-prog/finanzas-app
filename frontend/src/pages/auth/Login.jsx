@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import useAuthStore from '../../store/authStore';
 import toast from 'react-hot-toast';
-import Button from '../../components/ui/Button';
 
 export default function Login() {
   const [form, setForm] = useState({ email: '', password: '' });
@@ -19,7 +18,7 @@ export default function Login() {
       toast.success('¡Bienvenido de vuelta!');
       navigate('/dashboard');
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Error al iniciar sesión');
+      toast.error(err.response?.data?.message || 'Credenciales incorrectas');
     } finally {
       setLoading(false);
     }
@@ -31,82 +30,127 @@ export default function Login() {
       await login({ email: 'demo@finanzas.app', password: 'Demo123!' });
       toast.success('¡Bienvenido a la demo!');
       navigate('/dashboard');
-    } catch (err) {
+    } catch {
       toast.error('Error al entrar a la demo. Intenta de nuevo.');
     } finally {
       setDemoLoading(false);
     }
   };
 
+  const features = [
+    { icon: '📊', title: 'Score financiero', desc: 'Diagnóstico en tiempo real' },
+    { icon: '🏦', title: 'Control de deudas', desc: 'Estrategia Avalanche / Snowball' },
+    { icon: '📈', title: 'Predicción de gastos', desc: 'IA basada en tus hábitos' },
+    { icon: '🎯', title: 'Metas de ahorro', desc: 'Seguimiento con progreso visual' },
+  ];
+
   return (
-    <div className="min-h-screen flex bg-dark-900">
-      {/* Left panel */}
-      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-dark-950 via-dark-900 to-primary-900/20 p-12 flex-col justify-between relative overflow-hidden">
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-20 left-20 w-64 h-64 bg-primary-500 rounded-full blur-3xl" />
-          <div className="absolute bottom-20 right-20 w-48 h-48 bg-violet-500 rounded-full blur-3xl" />
+    <div className="min-h-screen flex" style={{ background: '#f9fafb' }}>
+
+      {/* ── Panel izquierdo ────────────────────────────────────────────── */}
+      <div className="hidden lg:flex lg:w-[52%] flex-col justify-between p-12 relative overflow-hidden"
+        style={{ background: '#111318' }}>
+
+        {/* Fondo decorativo */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          <div className="absolute -top-32 -left-32 w-96 h-96 rounded-full"
+            style={{ background: 'radial-gradient(circle, rgba(16,185,129,0.15) 0%, transparent 70%)' }} />
+          <div className="absolute bottom-0 right-0 w-80 h-80 rounded-full"
+            style={{ background: 'radial-gradient(circle, rgba(16,185,129,0.08) 0%, transparent 70%)' }} />
+          {/* Grid sutil */}
+          <div className="absolute inset-0 opacity-[0.03]"
+            style={{ backgroundImage: 'linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
         </div>
-        <div className="relative">
-          <div className="flex items-center gap-3 mb-12">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-500 to-violet-600 flex items-center justify-center text-white font-bold">F</div>
-            <span className="text-white text-xl font-bold">FinanzasPro</span>
+
+        {/* Logo */}
+        <div className="relative flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl flex items-center justify-center text-white font-black text-base"
+            style={{ background: 'linear-gradient(135deg, #10b981, #059669)', boxShadow: '0 4px 14px rgba(16,185,129,0.4)' }}>
+            F
           </div>
-          <h2 className="text-4xl font-bold text-white mb-4 leading-tight">
-            Toma el control<br />de tus finanzas
-          </h2>
-          <p className="text-slate-400 text-lg">Analiza, planifica y alcanza tus metas financieras con inteligencia.</p>
+          <span className="text-white font-bold text-lg tracking-tight">FinanzasPro</span>
         </div>
-        <div className="relative grid grid-cols-2 gap-4">
-          {[
-            { label: 'Score financiero', value: 'Personalizado', icon: '📊' },
-            { label: 'Estrategia de deuda', value: 'Avalanche / Snowball', icon: '🏦' },
-            { label: 'Análisis de gastos', value: 'Por categorías', icon: '📈' },
-            { label: 'Metas de ahorro', value: 'Con progreso visual', icon: '🎯' },
-          ].map((f) => (
-            <div key={f.label} className="bg-white/5 border border-white/10 rounded-xl p-4">
-              <p className="text-2xl mb-2">{f.icon}</p>
-              <p className="text-white text-sm font-medium">{f.value}</p>
-              <p className="text-slate-400 text-xs">{f.label}</p>
+
+        {/* Headline */}
+        <div className="relative">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full mb-6"
+            style={{ background: 'rgba(16,185,129,0.12)', border: '1px solid rgba(16,185,129,0.2)' }}>
+            <span className="w-1.5 h-1.5 rounded-full bg-primary-400 animate-pulse" />
+            <span className="text-primary-400 text-xs font-semibold tracking-wide">GESTIÓN FINANCIERA INTELIGENTE</span>
+          </div>
+
+          <h1 className="text-4xl xl:text-5xl font-black text-white leading-tight tracking-tight mb-4">
+            Toma el control<br />
+            <span style={{ color: '#10b981' }}>de tu dinero.</span>
+          </h1>
+          <p className="text-slate-400 text-base leading-relaxed max-w-sm">
+            Analiza tus finanzas, planifica tus metas y construye hábitos de ahorro con herramientas profesionales.
+          </p>
+        </div>
+
+        {/* Features */}
+        <div className="relative grid grid-cols-2 gap-3">
+          {features.map((f) => (
+            <div key={f.title} className="rounded-2xl p-4 transition-colors"
+              style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
+              <span className="text-xl block mb-2">{f.icon}</span>
+              <p className="text-white text-sm font-semibold leading-tight">{f.title}</p>
+              <p className="text-slate-500 text-xs mt-0.5">{f.desc}</p>
             </div>
           ))}
         </div>
       </div>
 
-      {/* Right panel */}
-      <div className="flex-1 flex items-center justify-center p-8">
-        <div className="w-full max-w-md animate-slide-up">
-          <div className="mb-8">
-            <div className="lg:hidden flex items-center gap-2 mb-6">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary-500 to-violet-600 flex items-center justify-center text-white font-bold text-sm">F</div>
-              <span className="text-white font-bold">FinanzasPro</span>
-            </div>
-            <h1 className="text-2xl font-bold text-white mb-1">Iniciar sesión</h1>
-            <p className="text-slate-400 text-sm">Accede a tu panel financiero</p>
+      {/* ── Panel derecho ──────────────────────────────────────────────── */}
+      <div className="flex-1 flex items-center justify-center px-6 py-12">
+        <div className="w-full max-w-[380px] animate-slide-up">
+
+          {/* Logo mobile */}
+          <div className="lg:hidden flex items-center gap-2.5 mb-8">
+            <div className="w-8 h-8 rounded-xl flex items-center justify-center text-white font-black text-sm"
+              style={{ background: 'linear-gradient(135deg, #10b981, #059669)' }}>F</div>
+            <span className="font-bold text-slate-900 text-base">FinanzasPro</span>
           </div>
 
+          <h2 className="text-2xl font-black text-slate-900 tracking-tight mb-1">Iniciar sesión</h2>
+          <p className="text-slate-400 text-sm mb-8">Accede a tu panel financiero personalizado</p>
+
+          {/* Demo CTA */}
           <button
             onClick={handleDemo}
             disabled={demoLoading}
-            className="w-full mb-6 flex items-center justify-center gap-3 px-4 py-3.5 rounded-xl border-2 border-dashed border-primary-500/40 bg-primary-500/5 hover:bg-primary-500/10 hover:border-primary-500/60 transition-all duration-200 group disabled:opacity-60 disabled:cursor-not-allowed"
+            className="w-full mb-6 group relative overflow-hidden rounded-2xl p-[1px] transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed"
+            style={{ background: 'linear-gradient(135deg, #10b981, #059669)' }}
           >
-            <span className="text-2xl">{demoLoading ? '⏳' : '🚀'}</span>
-            <div className="text-left">
-              <p className="text-primary-300 text-sm font-semibold group-hover:text-primary-200 transition-colors">
-                {demoLoading ? 'Entrando...' : 'Probar sin registrarse'}
-              </p>
-              <p className="text-slate-500 text-xs">Acceso inmediato con cuenta demo</p>
+            <div className="flex items-center gap-3.5 px-4 py-3.5 rounded-[15px] transition-colors"
+              style={{ background: demoLoading ? 'transparent' : 'rgba(17,19,24,0.95)' }}>
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 text-base"
+                style={{ background: 'rgba(16,185,129,0.15)' }}>
+                {demoLoading ? '⏳' : '🚀'}
+              </div>
+              <div className="text-left">
+                <p className="text-sm font-bold" style={{ color: '#10b981' }}>
+                  {demoLoading ? 'Entrando a la demo...' : 'Probar sin registrarse'}
+                </p>
+                <p className="text-xs text-slate-500">Acceso inmediato · Sin datos reales</p>
+              </div>
+              {!demoLoading && (
+                <span className="ml-auto text-slate-600 group-hover:text-primary-500 transition-colors text-sm">→</span>
+              )}
             </div>
           </button>
 
+          {/* Divider */}
           <div className="flex items-center gap-3 mb-6">
-            <div className="flex-1 h-px bg-slate-700/50" />
-            <span className="text-slate-500 text-xs">o inicia sesión con tu cuenta</span>
-            <div className="flex-1 h-px bg-slate-700/50" />
+            <div className="flex-1 h-px" style={{ background: '#e5e7eb' }} />
+            <span className="text-xs font-medium text-slate-400">o continúa con tu cuenta</span>
+            <div className="flex-1 h-px" style={{ background: '#e5e7eb' }} />
           </div>
 
+          {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-1.5">Correo electrónico</label>
+              <label className="input-label">Correo electrónico</label>
               <input
                 type="email"
                 required
@@ -116,8 +160,19 @@ export default function Login() {
                 onChange={(e) => setForm({ ...form, email: e.target.value })}
               />
             </div>
+
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-1.5">Contraseña</label>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="input-label" style={{ margin: 0 }}>Contraseña</label>
+                <Link to="/forgot-password"
+                  className="text-xs font-medium transition-colors"
+                  style={{ color: '#10b981' }}
+                  onMouseEnter={(e) => e.currentTarget.style.color = '#059669'}
+                  onMouseLeave={(e) => e.currentTarget.style.color = '#10b981'}
+                >
+                  ¿Olvidaste tu contraseña?
+                </Link>
+              </div>
               <input
                 type="password"
                 required
@@ -127,16 +182,19 @@ export default function Login() {
                 onChange={(e) => setForm({ ...form, password: e.target.value })}
               />
             </div>
-            <div className="flex justify-end">
-              <Link to="/forgot-password" className="text-xs text-primary-400 hover:text-primary-300 transition-colors">
-                ¿Olvidaste tu contraseña?
-              </Link>
-            </div>
-            <Button type="submit" className="w-full" loading={loading} size="lg">
-              Iniciar sesión
-            </Button>
-          </form>
 
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full py-3 rounded-xl font-bold text-white text-[15px] transition-all duration-150 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{
+                background: loading ? '#059669' : 'linear-gradient(135deg, #10b981, #059669)',
+                boxShadow: '0 4px 14px rgba(16,185,129,0.4)',
+              }}
+            >
+              {loading ? 'Verificando...' : 'Iniciar sesión'}
+            </button>
+          </form>
         </div>
       </div>
     </div>
