@@ -5,8 +5,9 @@ import toast from 'react-hot-toast';
 import Button from '../../components/ui/Button';
 
 export default function Login() {
-  const [form, setForm] = useState({ email: 'demo@finanzas.app', password: 'Demo123!' });
+  const [form, setForm] = useState({ email: '', password: '' });
   const [loading, setLoading] = useState(false);
+  const [demoLoading, setDemoLoading] = useState(false);
   const { login } = useAuthStore();
   const navigate = useNavigate();
 
@@ -21,6 +22,19 @@ export default function Login() {
       toast.error(err.response?.data?.message || 'Error al iniciar sesión');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDemo = async () => {
+    setDemoLoading(true);
+    try {
+      await login({ email: 'demo@finanzas.app', password: 'Demo123!' });
+      toast.success('¡Bienvenido a la demo!');
+      navigate('/dashboard');
+    } catch (err) {
+      toast.error('Error al entrar a la demo. Intenta de nuevo.');
+    } finally {
+      setDemoLoading(false);
     }
   };
 
@@ -70,9 +84,24 @@ export default function Login() {
             <p className="text-slate-400 text-sm">Accede a tu panel financiero</p>
           </div>
 
-          <div className="bg-primary-500/10 border border-primary-500/20 rounded-xl p-4 mb-6">
-            <p className="text-primary-300 text-sm font-medium mb-1">Cuenta demo disponible</p>
-            <p className="text-slate-400 text-xs">Email: demo@finanzas.app | Password: Demo123!</p>
+          <button
+            onClick={handleDemo}
+            disabled={demoLoading}
+            className="w-full mb-6 flex items-center justify-center gap-3 px-4 py-3.5 rounded-xl border-2 border-dashed border-primary-500/40 bg-primary-500/5 hover:bg-primary-500/10 hover:border-primary-500/60 transition-all duration-200 group disabled:opacity-60 disabled:cursor-not-allowed"
+          >
+            <span className="text-2xl">{demoLoading ? '⏳' : '🚀'}</span>
+            <div className="text-left">
+              <p className="text-primary-300 text-sm font-semibold group-hover:text-primary-200 transition-colors">
+                {demoLoading ? 'Entrando...' : 'Probar sin registrarse'}
+              </p>
+              <p className="text-slate-500 text-xs">Acceso inmediato con cuenta demo</p>
+            </div>
+          </button>
+
+          <div className="flex items-center gap-3 mb-6">
+            <div className="flex-1 h-px bg-slate-700/50" />
+            <span className="text-slate-500 text-xs">o inicia sesión con tu cuenta</span>
+            <div className="flex-1 h-px bg-slate-700/50" />
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
