@@ -97,4 +97,15 @@ const updateProfile = async (req, res, next) => {
   }
 };
 
-module.exports = { register, verifyEmail, resendVerification, login, refresh, forgotPassword, resetPassword, getProfile, updateProfile };
+const deleteAccount = async (req, res, next) => {
+  try {
+    const { password } = req.body;
+    await authService.deleteAccount(req.user.id, password);
+    res.json({ message: 'Cuenta eliminada permanentemente' });
+  } catch (err) {
+    if (err.status) res.status(err.status);
+    next(err);
+  }
+};
+
+module.exports = { register, verifyEmail, resendVerification, login, refresh, forgotPassword, resetPassword, getProfile, updateProfile, deleteAccount };

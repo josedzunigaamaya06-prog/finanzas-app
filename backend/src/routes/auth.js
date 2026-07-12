@@ -13,5 +13,6 @@ router.post('/forgot-password', authLimiter, ctrl.forgotPassword);
 router.post('/reset-password', ctrl.resetPassword);
 router.get('/profile', authenticate, ctrl.getProfile);
 router.put('/profile', authenticate, ctrl.updateProfile);
+router.delete('/account', authenticate, ctrl.deleteAccount);
 
 module.exports = router;

@@ -20,6 +20,7 @@ model User {
   isVerified             Boolean   @default(false)
   verificationCode       String?
   verificationCodeExpiry DateTime?
+  plan             Plan      @default(FREE)
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
 
@@ -37,6 +38,11 @@ model User {
   challenges       Challenge[]
 
   @@map("users")
+}
+
+enum Plan {
+  FREE
+  PREMIUM
 }
 
 // ─── MONEDEROS ──────────────────────────────────────────────────────────────

@@ -43,6 +43,7 @@ export const authAPI = {
   resetPassword: (data) => api.post('/auth/reset-password', data),
   getProfile: () => api.get('/auth/profile'),
   updateProfile: (data) => api.put('/auth/profile', data),
+  deleteAccount: (password) => api.delete('/auth/account', { data: { password } }),
 };
 
 export const dashboardAPI = {

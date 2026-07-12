@@ -151,6 +151,8 @@ const resetPassword = async (token, newPassword) => {
   });
 };
 
+const DEMO_EMAIL = 'demo@finanzas.app';
+
 const updateProfile = async (userId, data) => {
   const updateData = {};
   if (data.name) updateData.name = data.name;
@@ -160,6 +162,10 @@ const updateProfile = async (userId, data) => {
 
   if (data.currentPassword && data.newPassword) {
     const user = await prisma.user.findUnique({ where: { id: userId } });
+    // La cuenta demo es pública: si alguien le cambia la contraseña, bloquea la demo para todos
+    if (user.email === DEMO_EMAIL) {
+      throw Object.assign(new Error('La cuenta demo no permite cambiar la contraseña'), { status: 403 });
+    }
     const valid = await bcrypt.compare(data.currentPassword, user.password);
     if (!valid) throw Object.assign(new Error('Contraseña actual incorrecta'), { status: 400 });
     updateData.password = await bcrypt.hash(data.newPassword, 12);
@@ -168,8 +174,26 @@ const updateProfile = async (userId, data) => {
   return prisma.user.update({
     where: { id: userId },
     data: updateData,
-    select: { id: true, email: true, name: true, currency: true, timezone: true, avatar: true, createdAt: true },
+    select: { id: true, email: true, name: true, currency: true, timezone: true, avatar: true, plan: true, createdAt: true },
   });
 };
 
-module.exports = { register, verifyEmail, resendVerification, login, refreshToken, forgotPassword, resetPassword, updateProfile };
+// Eliminación de cuenta (derecho de supresión — Ley 1581 de habeas data).
+// Borra al usuario y TODOS sus datos: las relaciones tienen onDelete: Cascade,
+// así que gastos, ingresos, deudas, metas, billeteras, etc. se eliminan con él.
+const deleteAccount = async (userId, password) => {
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (!user) throw Object.assign(new Error('Usuario no encontrado'), { status: 404 });
+
+  if (user.email === DEMO_EMAIL) {
+    throw Object.assign(new Error('La cuenta demo no se puede eliminar'), { status: 403 });
+  }
+
+  if (!password) throw Object.assign(new Error('Contraseña requerida para eliminar la cuenta'), { status: 400 });
+  const valid = await bcrypt.compare(password, user.password);
+  if (!valid) throw Object.assign(new Error('Contraseña incorrecta'), { status: 400 });
+
+  await prisma.user.delete({ where: { id: userId } });
+};
+
+module.exports = { register, verifyEmail, resendVerification, login, refreshToken, forgotPassword, resetPassword, updateProfile, deleteAccount };
