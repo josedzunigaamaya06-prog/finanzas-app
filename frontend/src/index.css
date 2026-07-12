@@ -102,10 +102,11 @@
   }
 
   /* Checkbox toggle */
-  input[type="checkbox"].rounded {
-    @apply w-4 h-4 rounded border-slate-300 dark:border-slate-600
-           text-primary-500 focus:ring-primary-500/30 focus:ring-2
+  input[type="checkbox"] {
+    @apply w-4 h-4 border-slate-300 dark:border-slate-600
+           text-primary-500 focus:ring-2 focus:ring-primary-500/30
            cursor-pointer;
+    border-radius: 0.25rem;
     accent-color: #10b981;
   }
 
