@@ -4,7 +4,6 @@ import useAuthStore from './store/authStore';
 import useThemeStore from './store/themeStore';
 import Layout from './components/layout/Layout';
 import Login from './pages/auth/Login';
-import Register from './pages/auth/Register';
 import ForgotPassword from './pages/auth/ForgotPassword';
 import Dashboard from './pages/Dashboard';
 import Incomes from './pages/Incomes';
@@ -50,7 +49,7 @@ export default function App() {
   return (
     <Routes>
       <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
-      <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
+      <Route path="/register" element={<Navigate to="/login" replace />} />
       <Route path="/forgot-password" element={<PublicRoute><ForgotPassword /></PublicRoute>} />
       <Route path="/" element={<PrivateRoute><Layout /></PrivateRoute>}>
         <Route index element={<Navigate to="/dashboard" replace />} />
