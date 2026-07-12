@@ -7,6 +7,7 @@ import Modal from '../components/ui/Modal';
 import Badge from '../components/ui/Badge';
 import EmptyState from '../components/ui/EmptyState';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
+import { SkStatCard, SkCard } from '../components/ui/Skeleton';
 import toast from 'react-hot-toast';
 import useAuthStore from '../store/authStore';
 
@@ -76,7 +77,14 @@ export default function Goals() {
   const totalSaved = goals.reduce((s, g) => s + g.currentAmount, 0);
   const totalTarget = goals.reduce((s, g) => s + g.targetAmount, 0);
 
-  if (loading) return <div className="flex justify-center py-20"><LoadingSpinner size="lg" /></div>;
+  if (loading) return (
+    <div className="space-y-5 animate-fade-in">
+      <div className="grid grid-cols-3 gap-3">{[0,1,2].map(i => <SkStatCard key={i} />)}</div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {[0,1,2,3,4,5].map(i => <div key={i} style={{ opacity: 1 - i * 0.14 }}><SkCard /></div>)}
+      </div>
+    </div>
+  );
 
   return (
     <div className="space-y-5 animate-fade-in">
@@ -85,18 +93,33 @@ export default function Goals() {
       </div>
 
       {goals.length > 0 && (
-        <div className="grid grid-cols-3 gap-4">
-          <Card className="text-center">
-            <p className="text-xs text-slate-400 mb-1">Total ahorrado</p>
-            <p className="text-2xl font-bold text-emerald-500">{formatCurrency(totalSaved, user?.currency)}</p>
+        <div className="grid grid-cols-3 gap-3">
+          <Card padding="p-4 md:p-5">
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-400 mb-1.5">Total ahorrado</p>
+                <p className="text-xl md:text-2xl font-bold text-money text-emerald-500 truncate">{formatCurrency(totalSaved, user?.currency)}</p>
+              </div>
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 text-base" style={{ background: 'rgba(16,185,129,0.08)' }}>🏦</div>
+            </div>
           </Card>
-          <Card className="text-center">
-            <p className="text-xs text-slate-400 mb-1">Total objetivo</p>
-            <p className="text-2xl font-bold text-slate-900 dark:text-white">{formatCurrency(totalTarget, user?.currency)}</p>
+          <Card padding="p-4 md:p-5">
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-400 mb-1.5">Total objetivo</p>
+                <p className="text-xl md:text-2xl font-bold text-money text-slate-900 dark:text-white truncate">{formatCurrency(totalTarget, user?.currency)}</p>
+              </div>
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 text-base" style={{ background: 'rgba(100,116,139,0.08)' }}>🎯</div>
+            </div>
           </Card>
-          <Card className="text-center">
-            <p className="text-xs text-slate-400 mb-1">Progreso global</p>
-            <p className="text-2xl font-bold text-primary-500">{totalTarget > 0 ? formatPercent((totalSaved / totalTarget) * 100) : '0%'}</p>
+          <Card padding="p-4 md:p-5">
+            <div className="flex items-start justify-between gap-2">
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-400 mb-1.5">Progreso global</p>
+                <p className="text-xl md:text-2xl font-bold text-money text-primary-500">{totalTarget > 0 ? formatPercent((totalSaved / totalTarget) * 100) : '0%'}</p>
+              </div>
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 text-base" style={{ background: 'rgba(16,185,129,0.08)' }}>📊</div>
+            </div>
           </Card>
         </div>
       )}
@@ -107,56 +130,61 @@ export default function Goals() {
         </Card>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {goals.map((goal) => (
-            <Card key={goal.id} className="relative overflow-hidden">
-              {goal.isCompleted && (
-                <div className="absolute top-3 right-3">
-                  <Badge color="success">Completada ✓</Badge>
-                </div>
-              )}
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl" style={{ backgroundColor: `${goal.color}20` }}>
-                  {goal.icon}
-                </div>
-                <div className="min-w-0">
-                  <h4 className="font-semibold text-slate-900 dark:text-white truncate">{goal.name}</h4>
-                  {goal.description && <p className="text-xs text-slate-400 truncate">{goal.description}</p>}
-                </div>
-              </div>
-
-              <div className="mb-3">
-                <div className="flex justify-between text-sm mb-1">
-                  <span className="font-bold text-slate-900 dark:text-white" style={{ color: goal.color }}>{formatCurrency(goal.currentAmount, user?.currency)}</span>
-                  <span className="text-slate-400 text-xs">de {formatCurrency(goal.targetAmount, user?.currency)}</span>
-                </div>
-                <div className="h-2.5 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
-                  <div className="h-full rounded-full transition-all duration-500" style={{ width: `${Math.min(100, goal.progress)}%`, backgroundColor: goal.color }} />
-                </div>
-                <p className="text-xs text-slate-400 mt-1 text-right">{formatPercent(goal.progress)}</p>
-              </div>
-
-              {goal.deadline && (
-                <p className="text-xs text-slate-400 mb-3">
-                  Fecha límite: <span className="text-slate-600 dark:text-slate-300">{formatDate(goal.deadline)}</span>
-                </p>
-              )}
-
-              {!goal.isCompleted && (
-                <p className="text-xs text-slate-400 mb-4">
-                  Faltan: <span className="text-primary-400 font-medium">{formatCurrency(goal.targetAmount - goal.currentAmount, user?.currency)}</span>
-                </p>
-              )}
-
-              <div className="flex gap-2">
-                {!goal.isCompleted && (
-                  <Button size="sm" variant="primary" className="flex-1" onClick={() => { setSelectedGoal(goal); setContribForm(CONTRIB_FORM); setContribModal(true); }}>
-                    + Contribuir
-                  </Button>
+          {goals.map((goal, idx) => (
+            <div key={goal.id} className="card relative overflow-hidden p-0 animate-scale-in" style={{ animationDelay: `${idx * 50}ms` }}>
+              {/* Banda de color superior */}
+              <div className="h-1.5 w-full" style={{ backgroundColor: goal.color }} />
+              <div className="p-5">
+                {goal.isCompleted && (
+                  <div className="absolute top-4 right-4">
+                    <Badge color="success">Completada ✓</Badge>
+                  </div>
                 )}
-                <Button size="sm" variant="secondary" onClick={() => openEdit(goal)}>Editar</Button>
-                <Button size="sm" variant="ghost" onClick={() => handleDelete(goal.id)} className="text-red-400">×</Button>
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-11 h-11 rounded-2xl flex items-center justify-center text-xl flex-shrink-0" style={{ backgroundColor: `${goal.color}18` }}>
+                    {goal.icon}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <h4 className="font-bold text-slate-900 dark:text-white truncate text-[15px]">{goal.name}</h4>
+                    {goal.description && <p className="text-xs text-slate-400 truncate mt-0.5">{goal.description}</p>}
+                  </div>
+                </div>
+
+                <div className="mb-3">
+                  <div className="flex justify-between items-baseline mb-1.5">
+                    <span className="text-base font-bold text-money" style={{ color: goal.color }}>{formatCurrency(goal.currentAmount, user?.currency)}</span>
+                    <span className="text-xs text-slate-400">de {formatCurrency(goal.targetAmount, user?.currency)}</span>
+                  </div>
+                  <div className="h-2 bg-slate-100 dark:bg-slate-700/60 rounded-full overflow-hidden">
+                    <div className="h-full rounded-full transition-all duration-500" style={{ width: `${Math.min(100, goal.progress)}%`, backgroundColor: goal.color }} />
+                  </div>
+                  <p className="text-[11px] font-semibold mt-1" style={{ color: goal.color }}>{formatPercent(goal.progress)} completado</p>
+                </div>
+
+                <div className="flex flex-wrap gap-x-4 gap-y-0.5 mb-4 text-xs text-slate-400">
+                  {goal.deadline && (
+                    <span>Límite: <span className="text-slate-600 dark:text-slate-300 font-medium">{formatDate(goal.deadline)}</span></span>
+                  )}
+                  {!goal.isCompleted && (
+                    <span>Faltan: <span className="font-semibold" style={{ color: goal.color }}>{formatCurrency(goal.targetAmount - goal.currentAmount, user?.currency)}</span></span>
+                  )}
+                </div>
+
+                <div className="flex gap-2">
+                  {!goal.isCompleted && (
+                    <Button size="sm" variant="primary" className="flex-1" onClick={() => { setSelectedGoal(goal); setContribForm(CONTRIB_FORM); setContribModal(true); }}>
+                      + Contribuir
+                    </Button>
+                  )}
+                  <button onClick={() => openEdit(goal)} className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors text-slate-300 hover:text-primary-500 hover:bg-primary-50 flex-shrink-0" title="Editar">
+                    <svg width="13" height="13" viewBox="0 0 12 12" fill="none"><path d="M8.5 1L11 3.5L3.5 11H1V8.5L8.5 1Z" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                  </button>
+                  <button onClick={() => handleDelete(goal.id)} className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors text-slate-300 hover:text-red-500 hover:bg-red-50 flex-shrink-0" title="Eliminar">
+                    <svg width="13" height="13" viewBox="0 0 12 12" fill="none"><path d="M1.5 3H10.5M4 3V2C4 1.6 4.3 1 5 1H7C7.7 1 8 1.6 8 2V3M5 5.5V9M7 5.5V9M2.5 3L3 10.5H9L9.5 3" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                  </button>
+                </div>
               </div>
-            </Card>
+            </div>
           ))}
         </div>
       )}
@@ -164,25 +192,25 @@ export default function Goals() {
       <Modal isOpen={modal} onClose={() => setModal(false)} title={editing ? 'Editar meta' : 'Nueva meta financiera'}>
         <form onSubmit={handleSave} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">Nombre de la meta</label>
+            <label className="input-label">Nombre de la meta</label>
             <input required className="input-field" placeholder="Ej: Fondo de emergencia" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">Descripción (opcional)</label>
+            <label className="input-label">Descripción (opcional)</label>
             <input className="input-field" placeholder="Describe tu meta" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">Monto objetivo</label>
+              <label className="input-label">Monto objetivo</label>
               <input required type="number" min="0" step="any" className="input-field" placeholder="0" value={form.targetAmount} onChange={(e) => setForm({ ...form, targetAmount: e.target.value })} />
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">Fecha límite</label>
+              <label className="input-label">Fecha límite</label>
               <input type="date" className="input-field" value={form.deadline} onChange={(e) => setForm({ ...form, deadline: e.target.value })} />
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Ícono</label>
+            <label className="input-label" style={{ marginBottom: '0.5rem' }}>Ícono</label>
             <div className="flex flex-wrap gap-2">
               {ICONS.map((icon) => (
                 <button type="button" key={icon} onClick={() => setForm({ ...form, icon })} className={`w-10 h-10 text-xl rounded-xl flex items-center justify-center transition-all ${form.icon === icon ? 'bg-primary-500/20 ring-2 ring-primary-500' : 'hover:bg-slate-100 dark:hover:bg-slate-700'}`}>
@@ -192,7 +220,7 @@ export default function Goals() {
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Color</label>
+            <label className="input-label" style={{ marginBottom: '0.5rem' }}>Color</label>
             <div className="flex gap-2">
               {COLORS.map((color) => (
                 <button type="button" key={color} onClick={() => setForm({ ...form, color })} className={`w-7 h-7 rounded-full transition-all ${form.color === color ? 'ring-2 ring-offset-2 ring-offset-white dark:ring-offset-dark-800 ring-current scale-110' : ''}`} style={{ backgroundColor: color }} />
@@ -209,15 +237,15 @@ export default function Goals() {
       <Modal isOpen={contribModal} onClose={() => setContribModal(false)} title={`Contribuir a: ${selectedGoal?.name}`} size="sm">
         <form onSubmit={handleContrib} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">Monto</label>
+            <label className="input-label">Monto</label>
             <input required type="number" min="0" step="any" className="input-field" placeholder="0" value={contribForm.amount} onChange={(e) => setContribForm({ ...contribForm, amount: e.target.value })} />
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">Fecha</label>
+            <label className="input-label">Fecha</label>
             <input required type="date" className="input-field" value={contribForm.date} onChange={(e) => setContribForm({ ...contribForm, date: e.target.value })} />
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">Nota</label>
+            <label className="input-label">Nota</label>
             <input className="input-field" placeholder="Opcional" value={contribForm.note} onChange={(e) => setContribForm({ ...contribForm, note: e.target.value })} />
           </div>
           <div className="flex gap-3">

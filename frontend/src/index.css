@@ -51,8 +51,16 @@
     @apply w-full bg-white dark:bg-dark-850 border border-surface-200 dark:border-slate-600/60
            text-slate-900 dark:text-slate-100 rounded-xl px-4 py-2.5 text-sm
            placeholder-slate-400 dark:placeholder-slate-500
+           hover:border-slate-300 dark:hover:border-slate-500
            focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500
            transition-all duration-150;
+  }
+  select.input-field {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12' fill='none'%3E%3Cpath d='M2 4L6 8L10 4' stroke='%2394a3b8' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.875rem center;
+    padding-right: 2.5rem;
   }
   .input-label {
     @apply block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1.5;
@@ -93,6 +101,14 @@
            transition-all duration-150 focus:outline-none active:scale-[0.98];
   }
 
+  /* Checkbox toggle */
+  input[type="checkbox"].rounded {
+    @apply w-4 h-4 rounded border-slate-300 dark:border-slate-600
+           text-primary-500 focus:ring-primary-500/30 focus:ring-2
+           cursor-pointer;
+    accent-color: #10b981;
+  }
+
   /* Badges */
   .badge {
     @apply inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold;
@@ -128,6 +144,23 @@
     border-radius: 0 3px 3px 0;
     background: #10b981;
   }
+}
+
+/* ─── Skeleton shimmer ────────────────────────────────────────────────────── */
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position:  200% 0; }
+}
+.skeleton {
+  background: linear-gradient(90deg, #f1f5f9 25%, #e8edf3 50%, #f1f5f9 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.6s ease-in-out infinite;
+  border-radius: 0.5rem;
+}
+.dark .skeleton {
+  background: linear-gradient(90deg, rgba(30,41,59,0.7) 25%, rgba(51,65,85,0.45) 50%, rgba(30,41,59,0.7) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.6s ease-in-out infinite;
 }
 
 /* ─── Utilities ───────────────────────────────────────────────────────────── */

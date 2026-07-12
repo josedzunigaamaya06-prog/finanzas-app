@@ -7,6 +7,7 @@ import Modal from '../components/ui/Modal';
 import Badge from '../components/ui/Badge';
 import EmptyState from '../components/ui/EmptyState';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
+import { Sk, SkStatCard, SkTableRow, SkMobileRow } from '../components/ui/Skeleton';
 import toast from 'react-hot-toast';
 import useAuthStore from '../store/authStore';
 
@@ -157,7 +158,23 @@ export default function Expenses() {
 
   const total = expenses.reduce((s, e) => s + e.amount, 0);
 
-  if (loading) return <div className="flex justify-center py-20"><LoadingSpinner size="lg" /></div>;
+  if (loading) return (
+    <div className="space-y-4 animate-fade-in">
+      <div className="flex gap-2">
+        <Sk className="h-10 flex-1 !rounded-xl" />
+        <Sk className="h-10 w-28 !rounded-xl" />
+        <Sk className="h-10 w-16 !rounded-xl" />
+        <Sk className="h-10 w-24 !rounded-xl" />
+      </div>
+      <div className="grid grid-cols-3 gap-3">{[0,1,2].map(i => <SkStatCard key={i} />)}</div>
+      <div className="card p-0 overflow-hidden hidden md:block">
+        {[0,1,2,3,4,5].map(i => <div key={i} style={{ opacity: 1 - i * 0.12 }}><SkTableRow cols={6} /></div>)}
+      </div>
+      <div className="md:hidden space-y-2">
+        {[0,1,2,3].map(i => <div key={i} style={{ opacity: 1 - i * 0.18 }}><SkMobileRow /></div>)}
+      </div>
+    </div>
+  );
 
   return (
     <div className="space-y-4 animate-fade-in">
@@ -196,19 +213,34 @@ export default function Expenses() {
 
       {/* Stats */}
       <div className="grid grid-cols-3 gap-3">
-        <Card className="text-center p-3 md:p-6">
-          <p className="text-xs text-slate-400 mb-1">Total</p>
-          <p className="text-base md:text-2xl font-bold text-red-500 truncate">{formatCurrency(total, user?.currency)}</p>
+        <Card padding="p-4 md:p-5">
+          <div className="flex items-start justify-between gap-2">
+            <div className="min-w-0">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-400 mb-1.5">Total gastos</p>
+              <p className="text-xl md:text-2xl font-bold text-money text-red-500 truncate">{formatCurrency(total, user?.currency)}</p>
+            </div>
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 text-base" style={{ background: 'rgba(239,68,68,0.08)' }}>💸</div>
+          </div>
         </Card>
-        <Card className="text-center p-3 md:p-6">
-          <p className="text-xs text-slate-400 mb-1">Registros</p>
-          <p className="text-base md:text-2xl font-bold text-slate-900 dark:text-white">{meta.total || 0}</p>
+        <Card padding="p-4 md:p-5">
+          <div className="flex items-start justify-between gap-2">
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-400 mb-1.5">Registros</p>
+              <p className="text-xl md:text-2xl font-bold text-money text-slate-900 dark:text-white">{meta.total || 0}</p>
+            </div>
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 text-base" style={{ background: 'rgba(100,116,139,0.08)' }}>📋</div>
+          </div>
         </Card>
-        <Card className="text-center p-3 md:p-6">
-          <p className="text-xs text-slate-400 mb-1">Promedio</p>
-          <p className="text-base md:text-2xl font-bold text-slate-900 dark:text-white truncate">
-            {expenses.length ? formatCurrency(total / expenses.length, user?.currency) : '-'}
-          </p>
+        <Card padding="p-4 md:p-5">
+          <div className="flex items-start justify-between gap-2">
+            <div className="min-w-0">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-400 mb-1.5">Promedio</p>
+              <p className="text-xl md:text-2xl font-bold text-money text-slate-900 dark:text-white truncate">
+                {expenses.length ? formatCurrency(total / expenses.length, user?.currency) : '—'}
+              </p>
+            </div>
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 text-base" style={{ background: 'rgba(16,185,129,0.08)' }}>📊</div>
+          </div>
         </Card>
       </div>
 
@@ -225,13 +257,13 @@ export default function Expenses() {
                 <thead>
                   <tr className="border-b border-slate-100 dark:border-slate-700/50">
                     {['Descripción', 'Categoría', 'Fecha', 'Tipo', 'Monto', ''].map((h) => (
-                      <th key={h} className="text-left text-xs font-medium text-slate-400 px-4 py-3">{h}</th>
+                      <th key={h} className="text-left px-4 py-3 text-[10px] font-bold uppercase tracking-[0.06em] text-slate-400">{h}</th>
                     ))}
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-700/30">
-                  {expenses.map((expense) => (
-                    <tr key={expense.id} className="hover:bg-slate-50 dark:hover:bg-dark-850/50 transition-colors">
+                  {expenses.map((expense, idx) => (
+                    <tr key={expense.id} className="hover:bg-slate-50 dark:hover:bg-dark-850/50 transition-colors animate-fade-in" style={{ animationDelay: `${idx * 30}ms` }}>
                       <td className="px-4 py-3">
                         <p className="text-sm font-medium text-slate-900 dark:text-white">{expense.description}</p>
                       </td>
@@ -257,9 +289,13 @@ export default function Expenses() {
                         <span className="text-sm font-semibold text-red-500">-{formatCurrency(expense.amount, user?.currency)}</span>
                       </td>
                       <td className="px-4 py-3">
-                        <div className="flex gap-2">
-                          <button onClick={() => openEdit(expense)} className="text-xs text-slate-400 hover:text-primary-500 transition-colors">Editar</button>
-                          <button onClick={() => handleDelete(expense.id)} className="text-xs text-slate-400 hover:text-red-500 transition-colors">Eliminar</button>
+                        <div className="flex gap-1">
+                          <button onClick={() => openEdit(expense)} className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors text-slate-300 hover:text-primary-500 hover:bg-primary-50" title="Editar">
+                            <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M8.5 1L11 3.5L3.5 11H1V8.5L8.5 1Z" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                          </button>
+                          <button onClick={() => handleDelete(expense.id)} className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors text-slate-300 hover:text-red-500 hover:bg-red-50" title="Eliminar">
+                            <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M1.5 3H10.5M4 3V2C4 1.6 4.3 1 5 1H7C7.7 1 8 1.6 8 2V3M5 5.5V9M7 5.5V9M2.5 3L3 10.5H9L9.5 3" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -271,8 +307,8 @@ export default function Expenses() {
 
           {/* Vista móvil: tarjetas */}
           <div className="md:hidden space-y-2">
-            {expenses.map((expense) => (
-              <Card key={expense.id} className="p-4">
+            {expenses.map((expense, idx) => (
+              <Card key={expense.id} className="p-4 animate-fade-in" style={{ animationDelay: `${idx * 40}ms` }}>
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex items-start gap-3 min-w-0 flex-1">
                     <div
@@ -300,9 +336,13 @@ export default function Expenses() {
                   </div>
                   <div className="text-right flex-shrink-0">
                     <p className="text-base font-bold text-red-500">-{formatCurrency(expense.amount, user?.currency)}</p>
-                    <div className="flex gap-2 mt-1 justify-end">
-                      <button onClick={() => openEdit(expense)} className="text-xs text-slate-400 hover:text-primary-500">Editar</button>
-                      <button onClick={() => handleDelete(expense.id)} className="text-xs text-slate-400 hover:text-red-500">Eliminar</button>
+                    <div className="flex gap-1 mt-1 justify-end">
+                      <button onClick={() => openEdit(expense)} className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors text-slate-300 hover:text-primary-500 hover:bg-primary-50" title="Editar">
+                        <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M8.5 1L11 3.5L3.5 11H1V8.5L8.5 1Z" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                      </button>
+                      <button onClick={() => handleDelete(expense.id)} className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors text-slate-300 hover:text-red-500 hover:bg-red-50" title="Eliminar">
+                        <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M1.5 3H10.5M4 3V2C4 1.6 4.3 1 5 1H7C7.7 1 8 1.6 8 2V3M5 5.5V9M7 5.5V9M2.5 3L3 10.5H9L9.5 3" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -325,7 +365,7 @@ export default function Expenses() {
       <Modal isOpen={modal} onClose={() => setModal(false)} title={editing ? 'Editar gasto' : 'Nuevo gasto'}>
         <form onSubmit={handleSave} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">Descripción</label>
+            <label className="input-label">Descripción</label>
             <input
               required
               className="input-field"
@@ -367,24 +407,24 @@ export default function Expenses() {
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">Monto</label>
+              <label className="input-label">Monto</label>
               <input required type="number" min="0" step="any" className="input-field" placeholder="0" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} />
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">Fecha</label>
+              <label className="input-label">Fecha</label>
               <input required type="date" className="input-field" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">Categoría</label>
+              <label className="input-label">Categoría</label>
               <select className="input-field" value={form.categoryId} onChange={(e) => { setForm({ ...form, categoryId: e.target.value }); setAutoApplied(null); }}>
                 <option value="">Sin categoría</option>
                 {categories.map((c) => <option key={c.id} value={c.id}>{c.icon} {c.name}</option>)}
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">Tipo</label>
+              <label className="input-label">Tipo</label>
               <select className="input-field" value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })}>
                 <option value="VARIABLE">Variable</option>
                 <option value="FIXED">Fijo</option>
@@ -393,14 +433,14 @@ export default function Expenses() {
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">Método de pago</label>
+              <label className="input-label">Método de pago</label>
               <select className="input-field" value={form.paymentMethod} onChange={(e) => setForm({ ...form, paymentMethod: e.target.value })}>
                 <option value="DIGITAL">📱 Digital</option>
                 <option value="CASH">💵 Efectivo</option>
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">Billetera (opcional)</label>
+              <label className="input-label">Billetera (opcional)</label>
               <select className="input-field" value={form.walletId} onChange={(e) => setForm({ ...form, walletId: e.target.value })}>
                 <option value="">Sin billetera</option>
                 {wallets.map((w) => <option key={w.id} value={w.id}>{w.icon} {w.name}</option>)}
@@ -420,7 +460,7 @@ export default function Expenses() {
             </select>
           )}
           <div>
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">Etiquetas</label>
+            <label className="input-label">Etiquetas</label>
             <input className="input-field" placeholder="comida, salida, urgente" value={form.tags} onChange={(e) => setForm({ ...form, tags: e.target.value })} />
           </div>
           <div className="flex gap-3 pt-2">

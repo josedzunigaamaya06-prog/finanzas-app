@@ -38,8 +38,8 @@ const StatCard = ({ label, value, sub, icon, color = 'blue', trend }) => {
           {icon}
         </div>
       </div>
-      <p className="text-xl md:text-2xl font-bold leading-tight text-money"
-        style={{ color: color === 'green' ? accent.value : color === 'red' ? accent.value : '#0f172a' }}
+      <p className={`text-xl md:text-2xl font-bold leading-tight text-money ${color !== 'green' && color !== 'red' ? 'text-slate-900 dark:text-white' : ''}`}
+        style={color === 'green' || color === 'red' ? { color: accent.value } : {}}
       >
         {value}
       </p>

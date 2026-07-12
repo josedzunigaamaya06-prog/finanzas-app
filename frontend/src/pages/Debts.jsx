@@ -7,6 +7,7 @@ import Modal from '../components/ui/Modal';
 import Badge from '../components/ui/Badge';
 import EmptyState from '../components/ui/EmptyState';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
+import { SkStatCard, SkCard } from '../components/ui/Skeleton';
 import toast from 'react-hot-toast';
 import useAuthStore from '../store/authStore';
 
@@ -141,7 +142,14 @@ export default function Debts() {
   const totalMinPayment   = debts.reduce((s, d) => s + d.minimumPayment, 0);
   const totalMonthlyInterest = debts.reduce((s, d) => s + (d.monthlyInterest || 0), 0);
 
-  if (loading) return <div className="flex justify-center py-20"><LoadingSpinner size="lg" /></div>;
+  if (loading) return (
+    <div className="space-y-4 animate-fade-in">
+      <div className="grid grid-cols-3 gap-3">{[0,1,2].map(i => <SkStatCard key={i} />)}</div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {[0,1,2,3].map(i => <div key={i} style={{ opacity: 1 - i * 0.2 }}><SkCard /></div>)}
+      </div>
+    </div>
+  );
 
   const optimalPlan = strategies?.optimalPlan || [];
 
@@ -161,19 +169,34 @@ export default function Debts() {
 
       {/* Stats */}
       <div className="grid grid-cols-3 gap-3">
-        <Card className="text-center p-3 md:p-5">
-          <p className="text-xs text-slate-400 mb-1">Total deuda</p>
-          <p className="text-base md:text-2xl font-bold text-amber-500 truncate">{formatCurrency(totalBalance, user?.currency)}</p>
-          <p className="text-xs text-slate-500 mt-0.5">{debts.length} deuda{debts.length !== 1 ? 's' : ''}</p>
+        <Card padding="p-4 md:p-5">
+          <div className="flex items-start justify-between gap-2">
+            <div className="min-w-0">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-400 mb-1.5">Total deuda</p>
+              <p className="text-xl md:text-2xl font-bold text-money text-amber-500 truncate">{formatCurrency(totalBalance, user?.currency)}</p>
+              <p className="text-[11px] text-slate-400 mt-1">{debts.length} deuda{debts.length !== 1 ? 's' : ''}</p>
+            </div>
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 text-base" style={{ background: 'rgba(245,158,11,0.08)' }}>🏦</div>
+          </div>
         </Card>
-        <Card className="text-center p-3 md:p-5">
-          <p className="text-xs text-slate-400 mb-1">Pago mínimo/mes</p>
-          <p className="text-base md:text-2xl font-bold text-red-500 truncate">{formatCurrency(totalMinPayment, user?.currency)}</p>
+        <Card padding="p-4 md:p-5">
+          <div className="flex items-start justify-between gap-2">
+            <div className="min-w-0">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-400 mb-1.5">Pago mín./mes</p>
+              <p className="text-xl md:text-2xl font-bold text-money text-red-500 truncate">{formatCurrency(totalMinPayment, user?.currency)}</p>
+            </div>
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 text-base" style={{ background: 'rgba(239,68,68,0.08)' }}>📅</div>
+          </div>
         </Card>
-        <Card className="text-center p-3 md:p-5">
-          <p className="text-xs text-slate-400 mb-1">Interés mensual</p>
-          <p className="text-base md:text-2xl font-bold text-orange-500 truncate">{formatCurrency(totalMonthlyInterest, user?.currency)}</p>
-          <p className="text-xs text-slate-500 mt-0.5">Costo de tener deudas</p>
+        <Card padding="p-4 md:p-5">
+          <div className="flex items-start justify-between gap-2">
+            <div className="min-w-0">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.06em] text-slate-400 mb-1.5">Interés mensual</p>
+              <p className="text-xl md:text-2xl font-bold text-money text-orange-500 truncate">{formatCurrency(totalMonthlyInterest, user?.currency)}</p>
+              <p className="text-[11px] text-slate-400 mt-1">Costo de tener deudas</p>
+            </div>
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 text-base" style={{ background: 'rgba(249,115,22,0.08)' }}>📈</div>
+          </div>
         </Card>
       </div>
 
@@ -215,14 +238,14 @@ export default function Debts() {
             </Card>
           ) : (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              {debts.map((debt) => {
+              {debts.map((debt, idx) => {
                 const progress = debt.totalAmount > 0 ? ((debt.totalAmount - debt.currentBalance) / debt.totalAmount) * 100 : 0;
                 const catInfo  = CAT_MAP[debt.debtCategory] || { label: 'Otro', icon: '📂' };
                 const risk     = debt.recommendation?.risk || debt.riskLevel;
                 const riskCfg  = RISK_CONFIG[risk] || RISK_CONFIG.LOW;
 
                 return (
-                  <Card key={debt.id}>
+                  <Card key={debt.id} className="animate-scale-in" style={{ animationDelay: `${idx * 50}ms` }}>
                     {/* Encabezado */}
                     <div className="flex items-start justify-between mb-3 gap-2">
                       <div className="flex items-start gap-2.5 min-w-0">
@@ -409,17 +432,17 @@ export default function Debts() {
         <form onSubmit={handleSave} className="space-y-4">
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">Nombre de la deuda</label>
+              <label className="input-label">Nombre de la deuda</label>
               <input required className="input-field" placeholder="Tarjeta Visa" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">Entidad</label>
+              <label className="input-label">Entidad</label>
               <input required className="input-field" placeholder="Bancolombia" value={form.entity} onChange={(e) => setForm({ ...form, entity: e.target.value })} />
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">Tipo de deuda</label>
+            <label className="input-label">Tipo de deuda</label>
             <select className="input-field" value={form.debtCategory} onChange={(e) => setForm({ ...form, debtCategory: e.target.value })}>
               {DEBT_CATEGORIES.map((c) => <option key={c.value} value={c.value}>{c.icon} {c.label}</option>)}
             </select>
@@ -430,31 +453,31 @@ export default function Debts() {
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">Deuda original</label>
+              <label className="input-label">Deuda original</label>
               <input required type="number" min="0" step="any" className="input-field" placeholder="0" value={form.totalAmount} onChange={(e) => setForm({ ...form, totalAmount: e.target.value })} />
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">Saldo actual</label>
+              <label className="input-label">Saldo actual</label>
               <input required type="number" min="0" step="any" className="input-field" placeholder="0" value={form.currentBalance} onChange={(e) => setForm({ ...form, currentBalance: e.target.value })} />
             </div>
           </div>
 
           <div className="grid grid-cols-3 gap-3">
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
+              <label className="input-label">
                 Tasa ({form.interestPeriod === 'MONTHLY' ? 'mensual' : 'anual'} %)
               </label>
               <input required type="number" min="0" max="500" step="0.01" className="input-field" placeholder={form.interestPeriod === 'MONTHLY' ? '3.5' : '27.99'} value={form.interestRate} onChange={(e) => setForm({ ...form, interestRate: e.target.value })} />
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">Período tasa</label>
+              <label className="input-label">Período tasa</label>
               <select className="input-field" value={form.interestPeriod} onChange={(e) => setForm({ ...form, interestPeriod: e.target.value })}>
                 <option value="ANNUAL">Anual (EA)</option>
                 <option value="MONTHLY">Mensual</option>
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">Tipo interés</label>
+              <label className="input-label">Tipo interés</label>
               <select className="input-field" value={form.interestType} onChange={(e) => setForm({ ...form, interestType: e.target.value })}>
                 <option value="COMPOUND">Compuesto</option>
                 <option value="SIMPLE">Simple</option>
@@ -470,15 +493,15 @@ export default function Debts() {
 
           <div className="grid grid-cols-3 gap-3">
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">Cuota mínima</label>
+              <label className="input-label">Cuota mínima</label>
               <input required type="number" min="0" step="any" className="input-field" placeholder="0" value={form.minimumPayment} onChange={(e) => setForm({ ...form, minimumPayment: e.target.value })} />
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">Día de pago</label>
+              <label className="input-label">Día de pago</label>
               <input required type="number" min="1" max="31" className="input-field" placeholder="15" value={form.dueDate} onChange={(e) => setForm({ ...form, dueDate: e.target.value })} />
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">Fecha inicio</label>
+              <label className="input-label">Fecha inicio</label>
               <input required type="date" className="input-field" value={form.startDate} onChange={(e) => setForm({ ...form, startDate: e.target.value })} />
             </div>
           </div>
@@ -489,7 +512,7 @@ export default function Debts() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">Notas</label>
+            <label className="input-label">Notas</label>
             <textarea className="input-field" rows={2} placeholder="Información adicional..." value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
           </div>
 
@@ -576,15 +599,15 @@ export default function Debts() {
             <p className="text-xs text-slate-400 mt-0.5">Cuota mínima: {formatCurrency(selectedDebt?.minimumPayment, user?.currency)}</p>
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">Monto del pago</label>
+            <label className="input-label">Monto del pago</label>
             <input required type="number" min="0" step="any" className="input-field" placeholder="0" value={paymentForm.amount} onChange={(e) => setPaymentForm({ ...paymentForm, amount: e.target.value })} />
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">Fecha</label>
+            <label className="input-label">Fecha</label>
             <input required type="date" className="input-field" value={paymentForm.date} onChange={(e) => setPaymentForm({ ...paymentForm, date: e.target.value })} />
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">Nota (opcional)</label>
+            <label className="input-label">Nota (opcional)</label>
             <input className="input-field" placeholder="Ej: Pago extra, abono" value={paymentForm.note} onChange={(e) => setPaymentForm({ ...paymentForm, note: e.target.value })} />
           </div>
           <div className="flex gap-3">

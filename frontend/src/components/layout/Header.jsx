@@ -3,7 +3,7 @@ import useThemeStore from '../../store/themeStore';
 import NotificationBell from '../NotificationBell';
 
 const pageTitles = {
-  '/dashboard':       { title: 'Dashboard',      subtitle: 'Resumen de tu situación financiera' },
+  '/dashboard':       { title: 'Inicio',          subtitle: 'Resumen de tu situación financiera' },
   '/incomes':         { title: 'Ingresos',        subtitle: 'Gestiona tus fuentes de ingreso' },
   '/expenses':        { title: 'Gastos',          subtitle: 'Controla tus gastos' },
   '/debts':           { title: 'Deudas',          subtitle: 'Estrategia de pago de deudas' },
@@ -29,8 +29,7 @@ export default function Header({ onMenuClick }) {
   const page = pageTitles[pathname] || { title: 'FinanzasPro', subtitle: '' };
 
   return (
-    <header className="flex flex-col sticky top-0 z-30 pt-safe"
-      style={{ background: 'white', borderBottom: '1px solid #e5e7eb' }}>
+    <header className="flex flex-col sticky top-0 z-30 pt-safe bg-white dark:bg-dark-800 border-b border-surface-200 dark:border-slate-700/50">
       <div className="h-14 md:h-[3.75rem] flex items-center justify-between px-4 md:px-6">
 
         {/* Izquierda */}

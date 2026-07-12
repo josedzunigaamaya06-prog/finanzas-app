@@ -7,7 +7,7 @@ const navGroups = [
   {
     id: 'general',
     items: [
-      { to: '/dashboard', icon: '▦', label: 'Dashboard' },
+      { to: '/dashboard', icon: '▦', label: 'Inicio' },
     ],
   },
   {
