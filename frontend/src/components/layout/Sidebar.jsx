@@ -26,33 +26,21 @@ const navGroups = [
     items: [
       { to: '/budgets',   icon: '▤', label: 'Presupuestos' },
       { to: '/goals',     icon: '◎', label: 'Metas' },
-      { to: '/challenge', icon: '◈', label: 'Retos' },
       { to: '/calendar',  icon: '▦', label: 'Calendario' },
     ],
   },
   {
-    id: 'inteligencia',
-    label: 'Inteligencia',
+    id: 'analisis',
+    label: 'Análisis',
     items: [
       { to: '/recommendations', icon: '◆', label: 'Sugerencias' },
-      { to: '/auto-rules',      icon: '◈', label: 'Reglas auto' },
-      { to: '/insights',        icon: '◎', label: 'Análisis' },
-      { to: '/prediction',      icon: '↑', label: 'Predicción' },
-    ],
-  },
-  {
-    id: 'reportes',
-    label: 'Reportes',
-    items: [
-      { to: '/reports',    icon: '▤', label: 'Reportes' },
-      { to: '/comparison', icon: '↔', label: 'Comparativa' },
-      { to: '/score',      icon: '◆', label: 'Mi salud' },
-      { to: '/wrapped',    icon: '▦', label: 'Wrapped' },
+      { to: '/score',           icon: '◎', label: 'Mi salud' },
+      { to: '/reports',         icon: '▤', label: 'Reportes' },
     ],
   },
 ];
 
-const DEFAULT_OPEN = { general: true, dinero: true, planificacion: true, inteligencia: false, reportes: false };
+const DEFAULT_OPEN = { general: true, dinero: true, planificacion: true, analisis: true };
 
 export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose, isDesktop }) {
   const { user, logout } = useAuthStore();

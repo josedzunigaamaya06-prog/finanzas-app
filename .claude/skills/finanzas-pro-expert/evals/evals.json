@@ -1,0 +1,42 @@
+{
+  "skill_name": "finanzas-pro-expert",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Revisa la lógica de conversión de tasas de interés en el debtController de mi app FinanzasPro (carpeta backend). Tengo una tarjeta de crédito al 2.5% mensual y la app me está mostrando una tasa anual que no me cuadra con lo que el banco dice que es aprox 34% EA. Dime si el cálculo está bien hecho y si no, corrígelo.",
+      "expected_output": "Un análisis paso a paso (bueno/malo/corrección) sobre la fórmula real usada en el código, confirmando o corrigiendo la conversión mensual→EA (debe ser (1+i)^12-1, no una multiplicación simple por 12), con la corrección aplicada directamente en el archivo si hace falta.",
+      "files": [],
+      "expectations": [
+        "La respuesta calcula o cita explícitamente la fórmula (1+0.025)^12-1 y obtiene un resultado cercano a 34% (33-35%)",
+        "La respuesta concluye que la conversión mensual→anual ya existente en el código es matemáticamente correcta, en vez de inventar o aplicar un 'arreglo' a una fórmula que ya funciona bien",
+        "La respuesta muestra un proceso de auto-crítica explícito: al menos una ronda con puntos buenos y puntos a corregir antes de la conclusión final",
+        "La respuesta cita archivos y/o funciones reales del código (debtService.js o debtController.js) en vez de una respuesta genérica sin verificar contra el código real"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Quiero agregar una función de 'fondo de emergencia recomendado' a mi app de finanzas FinanzasPro: que le diga al usuario cuánto debería tener ahorrado según sus gastos fijos mensuales, y que aparezca como una nueva recomendación en el dashboard. Dame el mejor diseño para esto e impleméntalo.",
+      "expected_output": "Un análisis con auto-crítica del diseño propuesto (cuántos meses de gastos fijos usar como meta, cómo calcularlo, cómo mostrarlo sin alarmar) seguido de la implementación real integrada con el modelo Recommendation existente.",
+      "files": [],
+      "expectations": [
+        "La implementación se integra con el modelo Recommendation existente (usa un RecommendationType del enum ya definido en el schema) en vez de crear un sistema paralelo desde cero",
+        "La propuesta especifica un múltiplo concreto de gastos fijos mensuales (ej. 3 a 6 meses) como meta del fondo de emergencia, no queda vaga o sin número",
+        "La respuesta muestra un proceso de auto-crítica explícito: al menos una ronda con puntos buenos y puntos a corregir antes de la implementación final",
+        "El código fue realmente modificado (existe un changes.diff con contenido, no vacío)",
+        "La respuesta o el copy generado considera el contexto financiero colombiano (moneda COP, ciclos de pago, o gastos fijos realistas) en algún punto"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "En la cuenta demo de FinanzasPro, los usuarios se asustan porque su 'salud financiera' baja a grado D apenas registran una deuda tipo gota a gota, y el mensaje que sale suena muy alarmante y técnico. ¿Cómo mejoro esto para que sea honesto sobre el riesgo real pero no genere pánico ni confusión?",
+      "expected_output": "Análisis del mensaje/lógica actual del score financiero, identificando por qué asusta (tono, falta de contexto, urgencia excesiva), con una propuesta de mensaje corregido y honesto sobre el riesgo del gota a gota sin ser alarmista.",
+      "files": [],
+      "expectations": [
+        "La respuesta identifica correctamente que existen dos motores de score distintos (scoreController.js vs financialService.js) en vez de asumir que es un único sistema",
+        "La propuesta de mensaje corregido sigue siendo honesta sobre el riesgo del gota a gota (no lo minimiza ni lo suaviza hasta perder el punto) pero evita un tono de pánico",
+        "La respuesta muestra un proceso de auto-crítica explícito: al menos una ronda con puntos buenos y puntos a corregir antes de la conclusión final",
+        "La respuesta reconoce el contexto específico del gota a gota en Colombia (riesgo informal/coacción, no solo 'tasa de interés alta') en vez de tratarlo como una deuda más"
+      ]
+    }
+  ]
+}

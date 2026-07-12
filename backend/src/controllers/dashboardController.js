@@ -1,4 +1,5 @@
 ﻿const financialService = require('../services/financialService');
+const scoreService = require('../services/scoreService');
 const { generateRecommendations } = require('../services/recommendationService');
 const { getCurrentMonthYear } = require('../utils/helpers');
 
@@ -33,7 +34,7 @@ const getDashboard = async (req, res, next) => {
       financialService.getMonthlyTrend(userId, 6),
       financialService.getExpensesByCategory(userId, queryYear, queryMonth),
       financialService.getDebtSummary(userId),
-      financialService.calculateFinancialScore(userId),
+      scoreService.getDashboardScore(userId),
       getRecentTransactions(userId),
       financialService.getPaymentMethodStats(userId, queryYear, queryMonth),
       getWalletSummary(userId),

@@ -4,6 +4,7 @@ import useAuthStore from './store/authStore';
 import useThemeStore from './store/themeStore';
 import Layout from './components/layout/Layout';
 import Login from './pages/auth/Login';
+import Register from './pages/auth/Register';
 import ForgotPassword from './pages/auth/ForgotPassword';
 import Dashboard from './pages/Dashboard';
 import Incomes from './pages/Incomes';
@@ -16,13 +17,7 @@ import Recommendations from './pages/Recommendations';
 import Profile from './pages/Profile';
 import Wallets from './pages/Wallets';
 import Calendar from './pages/Calendar';
-import AutoRules from './pages/AutoRules';
-import Insights from './pages/Insights';
-import Prediction from './pages/Prediction';
 import Score from './pages/Score';
-import Comparison from './pages/Comparison';
-import Challenge from './pages/Challenge';
-import Wrapped from './pages/Wrapped';
 import LoadingSpinner from './components/ui/LoadingSpinner';
 
 const PrivateRoute = ({ children }) => {
@@ -49,7 +44,7 @@ export default function App() {
   return (
     <Routes>
       <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
-      <Route path="/register" element={<Navigate to="/login" replace />} />
+      <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
       <Route path="/forgot-password" element={<PublicRoute><ForgotPassword /></PublicRoute>} />
       <Route path="/" element={<PrivateRoute><Layout /></PrivateRoute>}>
         <Route index element={<Navigate to="/dashboard" replace />} />
@@ -63,13 +58,7 @@ export default function App() {
         <Route path="wallets" element={<Wallets />} />
         <Route path="calendar" element={<Calendar />} />
         <Route path="recommendations" element={<Recommendations />} />
-        <Route path="auto-rules" element={<AutoRules />} />
-        <Route path="insights" element={<Insights />} />
-        <Route path="prediction" element={<Prediction />} />
-        <Route path="score"      element={<Score />} />
-        <Route path="comparison" element={<Comparison />} />
-        <Route path="challenge"  element={<Challenge />} />
-        <Route path="wrapped"    element={<Wrapped />} />
+        <Route path="score" element={<Score />} />
         <Route path="profile" element={<Profile />} />
       </Route>
       <Route path="*" element={<Navigate to="/dashboard" replace />} />

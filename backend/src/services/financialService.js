@@ -152,61 +152,12 @@ const getDebtSummary = async (userId) => {
   return { totalBalance, totalMinimumPayment, avgInterestRate, count: debts.length };
 };
 
-// ─── Score financiero ───────────────────────────────────────────────────────
-const calculateFinancialScore = async (userId) => {
-  const now   = new Date();
-  const month = now.getMonth() + 1;
-  const year  = now.getFullYear();
-
-  const [monthly, debtSummary] = await Promise.all([
-    getMonthlyTotals(userId, year, month),
-    getDebtSummary(userId),
-  ]);
-
-  let score    = 100;
-  const insights = [];
-
-  // Tasa de ahorro
-  if (monthly.savingsRate < 0) {
-    score -= 30;
-    insights.push({ type: 'critical', message: 'Gastas más de lo que ganas este mes' });
-  } else if (monthly.savingsRate < 10) {
-    score -= 20;
-    insights.push({ type: 'warning', message: 'Tasa de ahorro muy baja (< 10%)' });
-  } else if (monthly.savingsRate < 20) {
-    score -= 10;
-    insights.push({ type: 'info', message: 'Tasa de ahorro mejorable (< 20%)' });
-  }
-
-  // Carga de deuda
-  if (monthly.totalIncome > 0) {
-    const debtRatio = (debtSummary.totalMinimumPayment / monthly.totalIncome) * 100;
-    if (debtRatio > 50)      { score -= 30; insights.push({ type: 'critical', message: 'Pagos de deuda superan el 50% de tus ingresos' }); }
-    else if (debtRatio > 35) { score -= 20; insights.push({ type: 'warning',  message: 'Carga de deuda alta (> 35% de ingresos)' }); }
-    else if (debtRatio > 20) { score -= 10; }
-  }
-
-  // Tasa de interés promedio alta
-  if (debtSummary.avgInterestRate > 0.25) { score -= 20; insights.push({ type: 'warning', message: 'Tienes deudas con tasas de interés muy altas' }); }
-  else if (debtSummary.avgInterestRate > 0.15) { score -= 10; }
-
-  if (monthly.totalIncome === 0) { score -= 20; insights.push({ type: 'warning', message: 'No registraste ingresos este mes' }); }
-
-  score = Math.max(0, Math.min(100, score));
-  let grade = 'A';
-  if (score < 40) grade = 'F';
-  else if (score < 55) grade = 'D';
-  else if (score < 70) grade = 'C';
-  else if (score < 85) grade = 'B';
-
-  return { score, grade, insights };
-};
+// El score financiero vive en scoreService.js — motor único para /score y dashboard.
 
 module.exports = {
   getMonthlyTotals,
   getMonthlyTrend,
   getExpensesByCategory,
   getDebtSummary,
-  calculateFinancialScore,
   getPaymentMethodStats,
 };

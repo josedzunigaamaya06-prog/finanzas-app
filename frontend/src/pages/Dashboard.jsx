@@ -99,7 +99,10 @@ export default function Dashboard() {
                 style={{ color: gradeColors[financialScore.grade]?.text || '#94a3b8' }}>
                 {financialScore.grade || '—'}
               </p>
-              <p className="text-[10px] text-slate-400 mt-0.5 font-medium">GRADE</p>
+              <p className="text-[10px] mt-0.5 font-medium"
+                style={{ color: gradeColors[financialScore.grade]?.text || '#94a3b8' }}>
+                {financialScore.gradeLabel || 'Salud'}
+              </p>
             </div>
             <div className="w-px h-8 bg-surface-200 mx-1" />
             <div className="text-center px-2">

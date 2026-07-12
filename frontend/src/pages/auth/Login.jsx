@@ -195,6 +195,13 @@ export default function Login() {
               {loading ? 'Verificando...' : 'Iniciar sesión'}
             </button>
           </form>
+
+          <p className="text-center text-sm text-slate-400 mt-6">
+            ¿No tienes cuenta?{' '}
+            <Link to="/register" className="font-semibold transition-colors" style={{ color: '#10b981' }}>
+              Créala gratis en 1 minuto
+            </Link>
+          </p>
         </div>
       </div>
     </div>

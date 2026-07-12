@@ -14,13 +14,7 @@ const pageTitles = {
   '/profile':         { title: 'Perfil',          subtitle: 'Configuración de tu cuenta' },
   '/calendar':        { title: 'Calendario',      subtitle: 'Recordatorios y pagos programados' },
   '/wallets':         { title: 'Billeteras',      subtitle: 'Tus cuentas y saldos' },
-  '/auto-rules':      { title: 'Reglas automáticas', subtitle: 'Categorización inteligente' },
-  '/insights':        { title: 'Análisis',        subtitle: 'Patrones y hábitos financieros' },
-  '/prediction':      { title: 'Predicción',      subtitle: 'Proyección de tus finanzas' },
   '/score':           { title: 'Mi salud financiera', subtitle: 'Score y diagnóstico' },
-  '/comparison':      { title: 'Comparativa',     subtitle: 'Mes vs mes y año vs año' },
-  '/challenge':       { title: 'Retos',           subtitle: 'Desafíos de ahorro mensual' },
-  '/wrapped':         { title: 'Wrapped',         subtitle: 'Tu resumen anual financiero' },
 };
 
 export default function Header({ onMenuClick }) {
