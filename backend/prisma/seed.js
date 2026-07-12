@@ -35,6 +35,17 @@ async function main() {
     });
   }
 
+  // Backfill de verificación: los usuarios creados ANTES de que existiera la
+  // verificación por correo no tienen código pendiente (verificationCode null),
+  // así que se marcan como verificados para no dejarlos bloqueados en el login.
+  // Los registros nuevos siempre nacen con código pendiente, por lo que este
+  // update nunca "auto-verifica" a un usuario que aún debe confirmar su correo.
+  const backfilled = await prisma.user.updateMany({
+    where: { isVerified: false, verificationCode: null },
+    data: { isVerified: true },
+  });
+  if (backfilled.count > 0) console.log(`✅ ${backfilled.count} usuario(s) existente(s) marcados como verificados`);
+
   // Usuario demo — siempre limpio, sin datos de ejemplo
   let demoUser = await prisma.user.findUnique({ where: { email: 'demo@finanzas.app' } });
 
@@ -58,6 +69,7 @@ async function main() {
         password: hashedPassword,
         name:     'Usuario Demo',
         currency: 'COP',
+        isVerified: true, // la cuenta demo nunca pasa por verificación
       },
     });
     console.log('✅ Usuario demo creado (cuenta vacía)');

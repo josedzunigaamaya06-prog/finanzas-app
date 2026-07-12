@@ -18,6 +18,12 @@ export default function Login() {
       toast.success('¡Bienvenido de vuelta!');
       navigate('/dashboard');
     } catch (err) {
+      // Cuenta sin verificar: llevar directo a la pantalla del código
+      if (err.response?.status === 403) {
+        toast('Tu cuenta necesita verificación. Te enviamos un código.', { icon: '✉️' });
+        navigate('/register', { state: { pendingEmail: form.email } });
+        return;
+      }
       toast.error(err.response?.data?.message || 'Credenciales incorrectas');
     } finally {
       setLoading(false);

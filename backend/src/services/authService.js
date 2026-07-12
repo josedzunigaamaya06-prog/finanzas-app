@@ -14,18 +14,77 @@ const generateTokens = (userId) => {
   return { accessToken, refreshToken };
 };
 
+const { sendVerificationEmail } = require('./emailService');
+
+// Código de verificación de 6 dígitos con vencimiento corto.
+const generateVerificationCode = () => {
+  const code = String(Math.floor(100000 + Math.random() * 900000));
+  const expiry = new Date(Date.now() + 15 * 60 * 1000); // 15 minutos
+  return { code, expiry };
+};
+
 const register = async ({ email, password, name, currency }) => {
   const existing = await prisma.user.findUnique({ where: { email } });
   if (existing) throw Object.assign(new Error('El correo ya está registrado'), { status: 409 });
 
   const hashedPassword = await bcrypt.hash(password, 12);
+  const { code, expiry } = generateVerificationCode();
+
   const user = await prisma.user.create({
-    data: { email, password: hashedPassword, name, currency: currency || 'COP' },
-    select: { id: true, email: true, name: true, currency: true, createdAt: true },
+    data: {
+      email,
+      password: hashedPassword,
+      name,
+      currency: currency || 'COP',
+      isVerified: false,
+      verificationCode: code,
+      verificationCodeExpiry: expiry,
+    },
+    select: { id: true, email: true, name: true },
   });
 
+  const emailSent = await sendVerificationEmail({ email: user.email, name: user.name, code });
+
+  // Sin tokens hasta que el correo esté verificado.
+  return { requiresVerification: true, email: user.email, emailSent };
+};
+
+const verifyEmail = async ({ email, code }) => {
+  const user = await prisma.user.findUnique({ where: { email } });
+  if (!user) throw Object.assign(new Error('Código inválido o expirado'), { status: 400 });
+  if (user.isVerified) throw Object.assign(new Error('Esta cuenta ya está verificada. Inicia sesión.'), { status: 400 });
+
+  const valid =
+    user.verificationCode &&
+    user.verificationCode === String(code).trim() &&
+    user.verificationCodeExpiry &&
+    user.verificationCodeExpiry > new Date();
+
+  if (!valid) throw Object.assign(new Error('Código inválido o expirado'), { status: 400 });
+
+  await prisma.user.update({
+    where: { id: user.id },
+    data: { isVerified: true, verificationCode: null, verificationCodeExpiry: null },
+  });
+
+  const { password: _, verificationCode: __, verificationCodeExpiry: ___, ...userSafe } = user;
   const tokens = generateTokens(user.id);
-  return { user, ...tokens };
+  return { user: { ...userSafe, isVerified: true }, ...tokens };
+};
+
+const resendVerification = async (email) => {
+  const user = await prisma.user.findUnique({ where: { email } });
+  // Respuesta genérica siempre: no revelar si el correo existe.
+  if (!user || user.isVerified) return { emailSent: false };
+
+  const { code, expiry } = generateVerificationCode();
+  await prisma.user.update({
+    where: { id: user.id },
+    data: { verificationCode: code, verificationCodeExpiry: expiry },
+  });
+
+  const emailSent = await sendVerificationEmail({ email: user.email, name: user.name, code });
+  return { emailSent };
 };
 
 const login = async ({ email, password }) => {
@@ -35,7 +94,13 @@ const login = async ({ email, password }) => {
   const valid = await bcrypt.compare(password, user.password);
   if (!valid) throw Object.assign(new Error('Credenciales inválidas'), { status: 401 });
 
-  const { password: _, ...userWithoutPassword } = user;
+  if (!user.isVerified) {
+    throw Object.assign(new Error('Tu cuenta aún no está verificada. Te enviamos un código a tu correo.'), {
+      status: 403,
+    });
+  }
+
+  const { password: _, verificationCode: __, verificationCodeExpiry: ___, ...userWithoutPassword } = user;
   const tokens = generateTokens(user.id);
   return { user: userWithoutPassword, ...tokens };
 };
@@ -107,4 +172,4 @@ const updateProfile = async (userId, data) => {
   });
 };
 
-module.exports = { register, login, refreshToken, forgotPassword, resetPassword, updateProfile };
+module.exports = { register, verifyEmail, resendVerification, login, refreshToken, forgotPassword, resetPassword, updateProfile };

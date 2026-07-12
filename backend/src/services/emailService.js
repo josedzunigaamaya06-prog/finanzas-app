@@ -140,4 +140,62 @@ const sendUpcomingRemindersEmail = async (userId) => {
   }
 };
 
-module.exports = { sendReminderEmail, sendUpcomingRemindersEmail };
+// ─── Código de verificación de cuenta ────────────────────────────────────────
+// Retorna true si el correo salió aceptado por Resend, false si no — el caller
+// decide qué comunicar al usuario (no se lanza excepción para no romper el registro).
+const sendVerificationEmail = async ({ email, name, code }) => {
+  if (!process.env.RESEND_API_KEY) {
+    console.error('RESEND_API_KEY no configurada — no se puede enviar el código de verificación');
+    return false;
+  }
+
+  const html = `
+    <!DOCTYPE html>
+    <html>
+    <body style="margin:0;padding:0;background:#f1f5f9;font-family:sans-serif;">
+      <div style="max-width:520px;margin:32px auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
+        <div style="background:linear-gradient(135deg,#10b981,#059669);padding:24px 32px;">
+          <h1 style="margin:0;color:#fff;font-size:22px;">Verifica tu cuenta</h1>
+          <p style="margin:4px 0 0;color:#d1fae5;font-size:14px;">FinanzasPro</p>
+        </div>
+        <div style="padding:24px 32px;">
+          <p style="color:#374151;">Hola <strong>${name}</strong>,</p>
+          <p style="color:#374151;">Tu código de verificación es:</p>
+          <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:20px;margin:20px 0;text-align:center;">
+            <p style="margin:0;font-size:36px;font-weight:800;letter-spacing:10px;color:#059669;">${code}</p>
+          </div>
+          <p style="color:#64748b;font-size:14px;">Este código vence en <strong>15 minutos</strong>. Si no creaste una cuenta en FinanzasPro, ignora este correo.</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+
+  try {
+    const res = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        from: 'FinanzasPro <onboarding@resend.dev>',
+        to: [email],
+        subject: `${code} es tu código de verificación — FinanzasPro`,
+        html,
+      }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      console.error('Resend error (verificación):', data);
+      return false;
+    }
+    console.log(`📧 Código de verificación enviado a ${email}`);
+    return true;
+  } catch (err) {
+    console.error('Error enviando código de verificación:', err.message);
+    return false;
+  }
+};
+
+module.exports = { sendReminderEmail, sendUpcomingRemindersEmail, sendVerificationEmail };

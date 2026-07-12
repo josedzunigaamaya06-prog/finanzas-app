@@ -5,9 +5,32 @@ const register = async (req, res, next) => {
   try {
     const { email, password, name, currency } = req.body;
     const result = await authService.register({ email, password, name, currency });
-    res.status(201).json({ message: 'Registro exitoso', ...result });
+    res.status(201).json({ message: 'Registro exitoso. Revisa tu correo para verificar tu cuenta.', ...result });
   } catch (err) {
     if (err.status) res.status(err.status);
+    next(err);
+  }
+};
+
+const verifyEmail = async (req, res, next) => {
+  try {
+    const { email, code } = req.body;
+    if (!email || !code) return res.status(400).json({ message: 'Correo y código requeridos' });
+    const result = await authService.verifyEmail({ email, code });
+    res.json({ message: 'Cuenta verificada', ...result });
+  } catch (err) {
+    if (err.status) res.status(err.status);
+    next(err);
+  }
+};
+
+const resendVerification = async (req, res, next) => {
+  try {
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ message: 'Correo requerido' });
+    const result = await authService.resendVerification(email);
+    res.json({ message: 'Si el correo está pendiente de verificación, recibirás un nuevo código.', ...result });
+  } catch (err) {
     next(err);
   }
 };
@@ -74,4 +97,4 @@ const updateProfile = async (req, res, next) => {
   }
 };
 
-module.exports = { register, login, refresh, forgotPassword, resetPassword, getProfile, updateProfile };
+module.exports = { register, verifyEmail, resendVerification, login, refresh, forgotPassword, resetPassword, getProfile, updateProfile };

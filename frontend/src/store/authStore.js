@@ -27,8 +27,15 @@ const useAuthStore = create((set, get) => ({
     return data;
   },
 
+  // El registro ya NO inicia sesión: la cuenta queda pendiente de verificar
+  // el código enviado al correo. Los tokens llegan solo tras verifyEmail.
   register: async (userData) => {
     const { data } = await authAPI.register(userData);
+    return data;
+  },
+
+  verifyEmail: async ({ email, code }) => {
+    const { data } = await authAPI.verifyEmail({ email, code });
     localStorage.setItem('accessToken', data.accessToken);
     localStorage.setItem('refreshToken', data.refreshToken);
     set({ user: data.user, isAuthenticated: true });
