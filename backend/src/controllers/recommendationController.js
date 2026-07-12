@@ -1,7 +1,6 @@
-const { PrismaClient } = require('@prisma/client');
-const { generateRecommendations } = require('../services/recommendationService');
+﻿const { generateRecommendations } = require('../services/recommendationService');
 
-const prisma = new PrismaClient();
+const prisma = require('../lib/prisma');
 
 const getAll = async (req, res, next) => {
   try {

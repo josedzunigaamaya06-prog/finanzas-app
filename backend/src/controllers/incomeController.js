@@ -1,7 +1,6 @@
-const { PrismaClient } = require('@prisma/client');
-const { getPaginationParams, buildDateFilter } = require('../utils/helpers');
+﻿const { getPaginationParams, buildDateFilter } = require('../utils/helpers');
 
-const prisma = new PrismaClient();
+const prisma = require('../lib/prisma');
 
 const getAll = async (req, res, next) => {
   try {
@@ -51,21 +50,35 @@ const getOne = async (req, res, next) => {
 const create = async (req, res, next) => {
   try {
     const { amount, description, date, categoryId, isRecurring, frequency, tags, paymentMethod, walletId } = req.body;
-    const income = await prisma.income.create({
-      data: {
-        userId: req.user.id,
-        amount,
-        description,
-        date: new Date(date),
-        categoryId: categoryId || null,
-        isRecurring: isRecurring || false,
-        frequency: frequency || null,
-        tags: tags || [],
-        paymentMethod: paymentMethod || null,
-        walletId: walletId || null,
-      },
-      include: { category: true },
-    });
+
+    const ops = [
+      prisma.income.create({
+        data: {
+          userId: req.user.id,
+          amount,
+          description,
+          date: new Date(date),
+          categoryId: categoryId || null,
+          isRecurring: isRecurring || false,
+          frequency: frequency || null,
+          tags: tags || [],
+          paymentMethod: paymentMethod || null,
+          walletId: walletId || null,
+        },
+        include: { category: true },
+      }),
+    ];
+
+    if (walletId) {
+      ops.push(
+        prisma.wallet.update({
+          where: { id: walletId },
+          data: { balance: { increment: amount } },
+        })
+      );
+    }
+
+    const [income] = await prisma.$transaction(ops);
     res.status(201).json({ message: 'Ingreso creado', income: { ...income, amount: Number(income.amount) } });
   } catch (err) {
     next(err);
@@ -78,21 +91,40 @@ const update = async (req, res, next) => {
     if (!existing) return res.status(404).json({ message: 'Ingreso no encontrado' });
 
     const { amount, description, date, categoryId, isRecurring, frequency, tags, paymentMethod, walletId } = req.body;
-    const income = await prisma.income.update({
-      where: { id: req.params.id },
-      data: {
-        ...(amount !== undefined && { amount }),
-        ...(description && { description }),
-        ...(date && { date: new Date(date) }),
-        ...(categoryId !== undefined && { categoryId: categoryId || null }),
-        ...(isRecurring !== undefined && { isRecurring }),
-        ...(frequency !== undefined && { frequency: frequency || null }),
-        ...(tags && { tags }),
-        ...(paymentMethod !== undefined && { paymentMethod: paymentMethod || null }),
-        ...(walletId !== undefined && { walletId: walletId || null }),
-      },
-      include: { category: true },
-    });
+
+    const newAmount   = amount   !== undefined ? amount   : Number(existing.amount);
+    const newWalletId = walletId !== undefined ? walletId : existing.walletId;
+    const oldAmount   = Number(existing.amount);
+    const oldWalletId = existing.walletId;
+
+    const ops = [
+      prisma.income.update({
+        where: { id: req.params.id },
+        data: {
+          ...(amount !== undefined && { amount }),
+          ...(description && { description }),
+          ...(date && { date: new Date(date) }),
+          ...(categoryId !== undefined && { categoryId: categoryId || null }),
+          ...(isRecurring !== undefined && { isRecurring }),
+          ...(frequency !== undefined && { frequency: frequency || null }),
+          ...(tags && { tags }),
+          ...(paymentMethod !== undefined && { paymentMethod: paymentMethod || null }),
+          ...(walletId !== undefined && { walletId: walletId || null }),
+        },
+        include: { category: true },
+      }),
+    ];
+
+    // Revertir efecto en wallet anterior
+    if (oldWalletId) {
+      ops.push(prisma.wallet.update({ where: { id: oldWalletId }, data: { balance: { decrement: oldAmount } } }));
+    }
+    // Aplicar efecto en wallet nuevo
+    if (newWalletId) {
+      ops.push(prisma.wallet.update({ where: { id: newWalletId }, data: { balance: { increment: newAmount } } }));
+    }
+
+    const [income] = await prisma.$transaction(ops);
     res.json({ message: 'Ingreso actualizado', income: { ...income, amount: Number(income.amount) } });
   } catch (err) {
     next(err);
@@ -103,7 +135,19 @@ const remove = async (req, res, next) => {
   try {
     const existing = await prisma.income.findFirst({ where: { id: req.params.id, userId: req.user.id } });
     if (!existing) return res.status(404).json({ message: 'Ingreso no encontrado' });
-    await prisma.income.delete({ where: { id: req.params.id } });
+
+    const ops = [prisma.income.delete({ where: { id: req.params.id } })];
+
+    if (existing.walletId) {
+      ops.push(
+        prisma.wallet.update({
+          where: { id: existing.walletId },
+          data: { balance: { decrement: Number(existing.amount) } },
+        })
+      );
+    }
+
+    await prisma.$transaction(ops);
     res.json({ message: 'Ingreso eliminado' });
   } catch (err) {
     next(err);

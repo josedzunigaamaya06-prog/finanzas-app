@@ -1,6 +1,5 @@
-const { PrismaClient } = require('@prisma/client');
-const { sendReminderEmail } = require('../services/emailService');
-const prisma = new PrismaClient();
+﻿const { sendReminderEmail } = require('../services/emailService');
+const prisma = require('../lib/prisma');
 
 const fmt = (r) => ({ ...r, amount: r.amount != null ? Number(r.amount) : null });
 

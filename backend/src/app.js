@@ -1,4 +1,19 @@
-require('dotenv').config();
+﻿require('dotenv').config();
+
+// Verificar variables de entorno críticas antes de arrancar
+const REQUIRED_ENV = ['JWT_SECRET', 'DATABASE_URL'];
+const PLACEHOLDER   = 'your-super-secret';
+for (const key of REQUIRED_ENV) {
+  if (!process.env[key]) {
+    console.error(`FATAL: Falta la variable de entorno ${key}`);
+    process.exit(1);
+  }
+}
+if (process.env.JWT_SECRET.includes(PLACEHOLDER)) {
+  console.error('FATAL: JWT_SECRET tiene el valor por defecto inseguro. Cámbialo antes de desplegar.');
+  process.exit(1);
+}
+
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');

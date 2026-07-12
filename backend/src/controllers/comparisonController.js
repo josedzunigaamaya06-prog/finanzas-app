@@ -1,6 +1,5 @@
-const { PrismaClient } = require('@prisma/client');
-const financialService = require('../services/financialService');
-const prisma = new PrismaClient();
+﻿const financialService = require('../services/financialService');
+const prisma = require('../lib/prisma');
 
 const getComparison = async (req, res, next) => {
   try {

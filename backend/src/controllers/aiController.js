@@ -1,7 +1,6 @@
-const { PrismaClient } = require('@prisma/client');
-const { suggestCategory } = require('../services/aiService');
+﻿const { suggestCategory } = require('../services/aiService');
 
-const prisma = new PrismaClient();
+const prisma = require('../lib/prisma');
 
 const suggestCategoryForExpense = async (req, res, next) => {
   try {

@@ -1,7 +1,6 @@
-const { PrismaClient } = require('@prisma/client');
-const { getMonthRange } = require('../utils/helpers');
+﻿const { getMonthRange } = require('../utils/helpers');
 
-const prisma = new PrismaClient();
+const prisma = require('../lib/prisma');
 
 const getMonthlyTotals = async (userId, year, month) => {
   const { start, end } = getMonthRange(year, month);

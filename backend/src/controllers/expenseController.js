@@ -1,9 +1,8 @@
-const { PrismaClient } = require('@prisma/client');
-const { getPaginationParams, buildDateFilter } = require('../utils/helpers');
+﻿const { getPaginationParams, buildDateFilter } = require('../utils/helpers');
 const { applyRules }    = require('./autoRulesController');
 const { trackPattern }  = require('./patternController');
 
-const prisma = new PrismaClient();
+const prisma = require('../lib/prisma');
 
 // ─── Verificar presupuesto después de cada gasto ──────────────────────────────
 
@@ -156,31 +155,42 @@ const create = async (req, res, next) => {
     const { amount, description, date, type, isRecurring, frequency, tags, budgetId, paymentMethod, walletId } = req.body;
     let { categoryId } = req.body;
 
-    // Si no viene categoría, intentar aplicar regla automática
     if (!categoryId) {
       const ruleCategory = await applyRules(req.user.id, description);
       if (ruleCategory) categoryId = ruleCategory;
     }
 
-    const expense = await prisma.expense.create({
-      data: {
-        userId:        req.user.id,
-        amount,
-        description,
-        date:          new Date(date),
-        categoryId:    categoryId    || null,
-        type:          type          || 'VARIABLE',
-        isRecurring:   isRecurring   || false,
-        frequency:     frequency     || null,
-        tags:          tags          || [],
-        budgetId:      budgetId      || null,
-        paymentMethod: paymentMethod || null,
-        walletId:      walletId      || null,
-      },
-      include: { category: true },
-    });
+    const ops = [
+      prisma.expense.create({
+        data: {
+          userId:        req.user.id,
+          amount,
+          description,
+          date:          new Date(date),
+          categoryId:    categoryId    || null,
+          type:          type          || 'VARIABLE',
+          isRecurring:   isRecurring   || false,
+          frequency:     frequency     || null,
+          tags:          tags          || [],
+          budgetId:      budgetId      || null,
+          paymentMethod: paymentMethod || null,
+          walletId:      walletId      || null,
+        },
+        include: { category: true },
+      }),
+    ];
 
-    // Aprendizaje de patrones (antes de responder para incluir en respuesta)
+    if (walletId) {
+      ops.push(
+        prisma.wallet.update({
+          where: { id: walletId },
+          data: { balance: { decrement: amount } },
+        })
+      );
+    }
+
+    const [expense] = await prisma.$transaction(ops);
+
     const learnedRule = categoryId
       ? await trackPattern(req.user.id, description, categoryId).catch((err) => {
           console.error('trackPattern error:', err.message);
@@ -191,10 +201,9 @@ const create = async (req, res, next) => {
     res.status(201).json({
       message: 'Gasto registrado',
       expense: { ...expense, amount: Number(expense.amount) },
-      learnedRule, // { keyword, category } si se creó una nueva regla automática
+      learnedRule,
     });
 
-    // Verificar presupuesto en segundo plano
     checkBudgetAlert(req.user.id, categoryId, date).catch(console.error);
   } catch (err) {
     next(err);
@@ -207,27 +216,45 @@ const update = async (req, res, next) => {
     if (!existing) return res.status(404).json({ message: 'Gasto no encontrado' });
 
     const { amount, description, date, categoryId, type, isRecurring, frequency, tags, budgetId, paymentMethod, walletId } = req.body;
-    const expense = await prisma.expense.update({
-      where: { id: req.params.id },
-      data: {
-        ...(amount      !== undefined && { amount }),
-        ...(description &&              { description }),
-        ...(date &&                     { date: new Date(date) }),
-        ...(categoryId  !== undefined && { categoryId: categoryId || null }),
-        ...(type &&                     { type }),
-        ...(isRecurring !== undefined && { isRecurring }),
-        ...(frequency   !== undefined && { frequency: frequency || null }),
-        ...(tags &&                     { tags }),
-        ...(budgetId    !== undefined && { budgetId: budgetId || null }),
-        ...(paymentMethod !== undefined && { paymentMethod: paymentMethod || null }),
-        ...(walletId    !== undefined && { walletId: walletId || null }),
-      },
-      include: { category: true },
-    });
 
-    // Aprender patrón si el usuario cambió la categoría manualmente
-    const finalCategoryId = categoryId !== undefined ? categoryId : existing.categoryId;
-    const finalDate       = date || existing.date;
+    const newAmount   = amount   !== undefined ? amount   : Number(existing.amount);
+    const newWalletId = walletId !== undefined ? walletId : existing.walletId;
+    const oldAmount   = Number(existing.amount);
+    const oldWalletId = existing.walletId;
+
+    const ops = [
+      prisma.expense.update({
+        where: { id: req.params.id },
+        data: {
+          ...(amount      !== undefined && { amount }),
+          ...(description &&              { description }),
+          ...(date &&                     { date: new Date(date) }),
+          ...(categoryId  !== undefined && { categoryId: categoryId || null }),
+          ...(type &&                     { type }),
+          ...(isRecurring !== undefined && { isRecurring }),
+          ...(frequency   !== undefined && { frequency: frequency || null }),
+          ...(tags &&                     { tags }),
+          ...(budgetId    !== undefined && { budgetId: budgetId || null }),
+          ...(paymentMethod !== undefined && { paymentMethod: paymentMethod || null }),
+          ...(walletId    !== undefined && { walletId: walletId || null }),
+        },
+        include: { category: true },
+      }),
+    ];
+
+    // Revertir efecto en wallet anterior
+    if (oldWalletId) {
+      ops.push(prisma.wallet.update({ where: { id: oldWalletId }, data: { balance: { increment: oldAmount } } }));
+    }
+    // Aplicar efecto en wallet nuevo
+    if (newWalletId) {
+      ops.push(prisma.wallet.update({ where: { id: newWalletId }, data: { balance: { decrement: newAmount } } }));
+    }
+
+    const [expense] = await prisma.$transaction(ops);
+
+    const finalCategoryId  = categoryId  !== undefined ? categoryId  : existing.categoryId;
+    const finalDate        = date        || existing.date;
     const finalDescription = description || existing.description;
     let learnedRule = null;
     if (categoryId && categoryId !== existing.categoryId) {
@@ -250,10 +277,21 @@ const remove = async (req, res, next) => {
   try {
     const existing = await prisma.expense.findFirst({ where: { id: req.params.id, userId: req.user.id } });
     if (!existing) return res.status(404).json({ message: 'Gasto no encontrado' });
-    await prisma.expense.delete({ where: { id: req.params.id } });
+
+    const ops = [prisma.expense.delete({ where: { id: req.params.id } })];
+
+    if (existing.walletId) {
+      ops.push(
+        prisma.wallet.update({
+          where: { id: existing.walletId },
+          data: { balance: { increment: Number(existing.amount) } },
+        })
+      );
+    }
+
+    await prisma.$transaction(ops);
     res.json({ message: 'Gasto eliminado' });
 
-    // Re-verificar presupuesto después de eliminar (puede que ya no esté en alerta)
     checkBudgetAlert(req.user.id, existing.categoryId, existing.date).catch(console.error);
   } catch (err) {
     next(err);

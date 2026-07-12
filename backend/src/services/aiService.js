@@ -1,4 +1,4 @@
-const suggestCategory = async (description, categories) => {
+﻿const suggestCategory = async (description, categories) => {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) throw new Error('ANTHROPIC_API_KEY no configurada');
 

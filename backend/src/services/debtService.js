@@ -1,4 +1,4 @@
-// ─── Conversión de tasa ─────────────────────────────────────────────────────
+﻿// ─── Conversión de tasa ─────────────────────────────────────────────────────
 const toAnnualRate = (rate, period) => {
   if (period === 'MONTHLY') return Math.pow(1 + Number(rate), 12) - 1;
   return Number(rate);

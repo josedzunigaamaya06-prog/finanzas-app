@@ -1,7 +1,6 @@
-const { PrismaClient } = require('@prisma/client');
-const debtService = require('../services/debtService');
+﻿const debtService = require('../services/debtService');
 
-const prisma = new PrismaClient();
+const prisma = require('../lib/prisma');
 
 const getAll = async (req, res, next) => {
   try {

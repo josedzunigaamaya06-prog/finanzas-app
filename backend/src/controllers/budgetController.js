@@ -1,7 +1,6 @@
-const { PrismaClient } = require('@prisma/client');
-const { getCurrentMonthYear, getMonthRange } = require('../utils/helpers');
+﻿const { getCurrentMonthYear, getMonthRange } = require('../utils/helpers');
 
-const prisma = new PrismaClient();
+const prisma = require('../lib/prisma');
 
 const getAll = async (req, res, next) => {
   try {

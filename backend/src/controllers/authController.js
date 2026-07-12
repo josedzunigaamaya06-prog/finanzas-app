@@ -1,4 +1,4 @@
-const authService = require('../services/authService');
+﻿const authService = require('../services/authService');
 const { sendUpcomingRemindersEmail } = require('../services/emailService');
 
 const register = async (req, res, next) => {

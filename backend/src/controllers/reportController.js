@@ -1,8 +1,7 @@
-const { PrismaClient } = require('@prisma/client');
-const financialService = require('../services/financialService');
+﻿const financialService = require('../services/financialService');
 const { getMonthRange } = require('../utils/helpers');
 
-const prisma = new PrismaClient();
+const prisma = require('../lib/prisma');
 
 const getMonthlyReport = async (req, res, next) => {
   try {

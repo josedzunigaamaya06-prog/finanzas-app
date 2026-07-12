@@ -1,9 +1,8 @@
-const financialService = require('../services/financialService');
+﻿const financialService = require('../services/financialService');
 const { generateRecommendations } = require('../services/recommendationService');
-const { PrismaClient } = require('@prisma/client');
 const { getCurrentMonthYear } = require('../utils/helpers');
 
-const prisma = new PrismaClient();
+const prisma = require('../lib/prisma');
 
 const getWalletSummary = async (userId) => {
   const wallets = await prisma.wallet.findMany({
