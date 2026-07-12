@@ -83,7 +83,7 @@ const sendReminderEmail = async ({ user, reminder }) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        from: 'FinanzasPro <onboarding@resend.dev>',
+        from: process.env.EMAIL_FROM || 'FinanzasPro <onboarding@resend.dev>',
         to: [user.email],
         subject,
         html,
@@ -179,7 +179,7 @@ const sendVerificationEmail = async ({ email, name, code }) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        from: 'FinanzasPro <onboarding@resend.dev>',
+        from: process.env.EMAIL_FROM || 'FinanzasPro <onboarding@resend.dev>',
         to: [email],
         subject: `${code} es tu código de verificación — FinanzasPro`,
         html,
