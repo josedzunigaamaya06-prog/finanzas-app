@@ -284,13 +284,17 @@ export default function Debts() {
                       </div>
                     </div>
 
-                    {/* Tiempo estimado */}
-                    {debt.payoff && (
+                    {/* Tiempo estimado — o alerta si la cuota no alcanza */}
+                    {debt.payoff ? (
                       <p className="text-xs text-slate-400 mb-3">
                         Libre en <span className="text-slate-600 dark:text-slate-300 font-medium">{debt.payoff.years}a {debt.payoff.remainingMonths}m</span>
                         {' '} · Total real: <span className="text-red-400 font-medium">{formatCurrency(debt.payoff.totalPaid, user?.currency)}</span>
                       </p>
-                    )}
+                    ) : debt.monthlyInterest > 0 && debt.minimumPayment <= debt.monthlyInterest ? (
+                      <div className="rounded-xl p-2.5 mb-3 text-xs border border-red-500/30 bg-red-500/5 text-red-500 dark:text-red-400 leading-relaxed">
+                        ⚠️ Tu cuota mínima ({formatCurrency(debt.minimumPayment, user?.currency)}) no cubre el interés mensual ({formatCurrency(debt.monthlyInterest, user?.currency)}): así la deuda <strong>crece</strong> cada mes en vez de bajar. Sube la cuota por encima del interés o renegocia la tasa.
+                      </div>
+                    ) : null}
 
                     {/* Progreso */}
                     <div className="mb-3">
@@ -408,18 +412,24 @@ export default function Debts() {
                     {s.badge && <Badge color="primary">{s.badge}</Badge>}
                   </div>
                   <p className="text-xs text-slate-400 mb-4">{s.desc}</p>
-                  <div className="space-y-2">
-                    <div>
-                      <p className="text-xs text-slate-400">Tiempo total</p>
-                      <p className="text-lg font-bold text-slate-900 dark:text-white">
-                        {Math.floor(data.months / 12)}a {data.months % 12}m
-                      </p>
+                  {data?.unpayable ? (
+                    <div className="rounded-xl p-3 text-xs border border-red-500/30 bg-red-500/5 text-red-500 dark:text-red-400 leading-relaxed">
+                      ⚠️ <strong>Con las cuotas actuales esta deuda nunca se termina de pagar:</strong> el pago mensual no alcanza a cubrir ni los intereses, así que el saldo crece cada mes. Sube la cuota mínima o renegocia la tasa para ver una proyección real.
                     </div>
-                    <div>
-                      <p className="text-xs text-slate-400">Total en intereses</p>
-                      <p className="text-base font-bold text-red-400">{formatCurrency(data.totalInterest, user?.currency)}</p>
+                  ) : (
+                    <div className="space-y-2">
+                      <div>
+                        <p className="text-xs text-slate-400">Tiempo total</p>
+                        <p className="text-lg font-bold text-slate-900 dark:text-white">
+                          {Math.floor(data.months / 12)}a {data.months % 12}m
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-slate-400">Total en intereses</p>
+                        <p className="text-base font-bold text-red-400">{formatCurrency(data.totalInterest, user?.currency)}</p>
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </Card>
               );
             })}

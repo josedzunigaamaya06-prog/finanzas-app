@@ -266,6 +266,15 @@ const compareStrategies = (debts, extraPayment = 0) => {
       }
       months++;
     }
+
+    // Si tras 50 años simulados sigue habiendo saldo, los pagos no cubren ni
+    // los intereses: la deuda nunca se paga. Se reporta explícito en vez de
+    // mostrar cifras astronómicas (el saldo crece compuesto durante 600 meses
+    // y produce números sin sentido que destruyen la confianza del usuario).
+    if (ds.some((d) => d.balance > 0.01)) {
+      return { unpayable: true, months: null, totalInterest: null };
+    }
+
     return { months, totalInterest: Math.round(totalInterest * 100) / 100 };
   };
 
