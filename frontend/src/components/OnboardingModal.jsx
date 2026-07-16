@@ -11,7 +11,7 @@ const STEPS = [
     emoji: '👋',
     title: '¡Bienvenido a FinanzasPro!',
     subtitle: 'Tu aliado para tomar control de tus finanzas personales',
-    color: 'from-primary-600 to-violet-600',
+    color: 'from-primary-500 to-primary-600',
     content: (
       <div className="space-y-3">
         <p className="text-slate-600 dark:text-slate-300 text-sm leading-relaxed">
@@ -306,7 +306,7 @@ const STEPS = [
     emoji: '🚀',
     title: '¡Todo listo!',
     subtitle: 'Ya sabes todo lo que necesitas para empezar',
-    color: 'from-primary-600 to-violet-600',
+    color: 'from-primary-500 to-primary-600',
     content: (
       <div className="space-y-4">
         <p className="text-slate-600 dark:text-slate-300 text-sm leading-relaxed text-center">
@@ -433,7 +433,7 @@ export default function OnboardingModal() {
           {isLast ? (
             <button
               onClick={() => finish('/wallets')}
-              className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-primary-600 to-violet-600 text-white text-sm font-bold transition-all hover:opacity-90 shadow-lg shadow-primary-500/30"
+              className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 text-white text-sm font-bold transition-all hover:opacity-90 shadow-lg shadow-primary-500/30"
             >
               🚀 ¡Empezar ahora!
             </button>

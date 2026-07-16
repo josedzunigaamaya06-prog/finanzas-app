@@ -27,7 +27,7 @@ export default function ForgotPassword() {
     <div className="min-h-screen flex items-center justify-center bg-dark-900 p-8">
       <div className="w-full max-w-md animate-slide-up">
         <div className="flex items-center gap-2 mb-8">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary-500 to-violet-600 flex items-center justify-center text-white font-bold">F</div>
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center text-white font-bold">F</div>
           <span className="text-white text-xl font-bold">FinanzasPro</span>
         </div>
 
