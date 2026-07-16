@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 import { expensesAPI, walletsAPI, autoRulesAPI, aiAPI } from '../services/api';
-import { formatCurrency, formatDate, toInputDate } from '../utils/formatters';
+import { formatCurrency, formatDate, toInputDate, todayInputDate } from '../utils/formatters';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import Modal from '../components/ui/Modal';
@@ -14,7 +14,7 @@ import useAuthStore from '../store/authStore';
 const PAYMENT_METHOD_LABELS = { DIGITAL: { label: 'Digital', icon: '📱', color: 'info' }, CASH: { label: 'Efectivo', icon: '💵', color: 'success' } };
 
 const EMPTY_FORM = {
-  description: '', amount: '', date: new Date().toISOString().split('T')[0],
+  description: '', amount: '', date: todayInputDate(),
   categoryId: '', type: 'VARIABLE', isRecurring: false, frequency: '', tags: '',
   paymentMethod: 'DIGITAL', walletId: '',
 };

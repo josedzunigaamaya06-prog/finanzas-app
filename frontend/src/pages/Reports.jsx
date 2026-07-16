@@ -22,7 +22,7 @@ export default function Reports() {
   const handleExportMonthlyExcel = () => {
     if (!monthlyData) return;
     const rows = monthlyData.topExpenses.map((e) => ({
-      Fecha: new Date(e.date).toLocaleDateString('es-CO'),
+      Fecha: new Date(e.date).toLocaleDateString('es-CO', { timeZone: 'UTC' }),
       Descripción: e.description,
       Categoría: e.category?.name || '-',
       Monto: Number(e.amount),
@@ -39,7 +39,7 @@ export default function Reports() {
       subtitle: `Ingresos: ${formatCurrencyRaw(monthlyData.totals.totalIncome)}  |  Gastos: ${formatCurrencyRaw(monthlyData.totals.totalExpenses)}  |  Ahorro: ${formatCurrencyRaw(monthlyData.totals.netSavings)}`,
       columns: ['Fecha', 'Descripción', 'Categoría', 'Monto', 'Tipo'],
       rows: monthlyData.topExpenses.map((e) => [
-        new Date(e.date).toLocaleDateString('es-CO'),
+        new Date(e.date).toLocaleDateString('es-CO', { timeZone: 'UTC' }),
         e.description,
         e.category?.name || '-',
         formatCurrencyRaw(e.amount),

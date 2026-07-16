@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { goalsAPI } from '../services/api';
-import { formatCurrency, formatDate, toInputDate, formatPercent } from '../utils/formatters';
+import { formatCurrency, formatDate, toInputDate, formatPercent, todayInputDate } from '../utils/formatters';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import Modal from '../components/ui/Modal';
@@ -15,7 +15,7 @@ const ICONS = ['🎯', '✈️', '🏠', '🚗', '💻', '📚', '🛡️', '�
 const COLORS = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16'];
 
 const EMPTY_FORM = { name: '', description: '', targetAmount: '', deadline: '', color: '#6366f1', icon: '🎯' };
-const CONTRIB_FORM = { amount: '', date: new Date().toISOString().split('T')[0], note: '' };
+const CONTRIB_FORM = { amount: '', date: todayInputDate(), note: '' };
 
 export default function Goals() {
   const [goals, setGoals] = useState([]);

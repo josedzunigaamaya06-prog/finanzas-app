@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { debtsAPI } from '../services/api';
-import { formatCurrency, formatPercent, formatDate, toInputDate } from '../utils/formatters';
+import { formatCurrency, formatPercent, formatDate, toInputDate, todayInputDate } from '../utils/formatters';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import Modal from '../components/ui/Modal';
@@ -38,11 +38,11 @@ const EMPTY_FORM = {
   name: '', entity: '', debtCategory: 'BANK_LOAN',
   totalAmount: '', currentBalance: '', interestRate: '',
   interestPeriod: 'ANNUAL', minimumPayment: '', dueDate: '15',
-  interestType: 'COMPOUND', startDate: new Date().toISOString().split('T')[0],
+  interestType: 'COMPOUND', startDate: todayInputDate(),
   notes: '', isNegotiable: true,
 };
 
-const PAYMENT_FORM = { amount: '', date: new Date().toISOString().split('T')[0], note: '' };
+const PAYMENT_FORM = { amount: '', date: todayInputDate(), note: '' };
 
 export default function Debts() {
   const [debts, setDebts] = useState([]);
