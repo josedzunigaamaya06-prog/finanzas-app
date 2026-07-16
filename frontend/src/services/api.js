@@ -77,6 +77,7 @@ export const debtsAPI = {
 
 export const goalsAPI = {
   getAll: () => api.get('/goals'),
+  getSavingsCapacity: () => api.get('/goals/savings-capacity'),
   create: (data) => api.post('/goals', data),
   update: (id, data) => api.put(`/goals/${id}`, data),
   remove: (id) => api.delete(`/goals/${id}`),

@@ -6,6 +6,7 @@ const { goalRules } = require('../middleware/validate');
 
 router.use(authenticate);
 router.get('/', ctrl.getAll);
+router.get('/savings-capacity', ctrl.getSavingsCapacity);
 router.post('/', goalRules, ctrl.create);
 router.put('/:id', goalRules, ctrl.update);
 router.delete('/:id', ctrl.remove);

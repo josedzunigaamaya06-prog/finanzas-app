@@ -27,6 +27,9 @@ export default function Goals() {
   const [form, setForm] = useState(EMPTY_FORM);
   const [contribForm, setContribForm] = useState(CONTRIB_FORM);
   const [saving, setSaving] = useState(false);
+  // Calculadora de cuota recomendada
+  const [capacity, setCapacity] = useState(null); // { monthlyFixedExpenses, monthlyDebtPayments, hasData }
+  const [fixedIncome, setFixedIncome] = useState(() => localStorage.getItem('fixedIncome') || '');
   const { user } = useAuthStore();
 
   const load = async () => {
@@ -36,6 +39,11 @@ export default function Goals() {
   };
 
   useEffect(() => { load(); }, []);
+
+  // Carga la capacidad de ahorro (gastos fijos + pagos de deuda) una vez
+  useEffect(() => {
+    goalsAPI.getSavingsCapacity().then((r) => setCapacity(r.data)).catch(() => {});
+  }, []);
 
   const openCreate = () => { setEditing(null); setForm(EMPTY_FORM); setModal(true); };
   const openEdit = (g) => {
@@ -76,6 +84,46 @@ export default function Goals() {
 
   const totalSaved = goals.reduce((s, g) => s + g.currentAmount, 0);
   const totalTarget = goals.reduce((s, g) => s + g.targetAmount, 0);
+
+  // ── Cuota de aporte recomendada ──────────────────────────────────────────
+  // disponible = ingreso fijo − gastos fijos − pagos de deuda. Recomendamos la
+  // MITAD del disponible (la otra mitad queda para gastos variables e imprevistos).
+  const roundToThousand = (n) => Math.max(0, Math.round(n / 1000) * 1000);
+
+  const recommendation = (() => {
+    const income = parseFloat(fixedIncome);
+    if (!capacity || !income || income <= 0) return null;
+
+    const fixedExp = capacity.monthlyFixedExpenses;
+    const debtPay  = capacity.monthlyDebtPayments;
+    const disponible = income - fixedExp - debtPay;
+
+    // Cuota necesaria para cumplir a tiempo (si la meta tiene fecha)
+    let requiredPerMonth = null;
+    if (form.deadline && form.targetAmount) {
+      const target = parseFloat(form.targetAmount);
+      const current = editing ? Number(editing.currentAmount) : 0;
+      const falta = Math.max(0, target - current);
+      const months = Math.max(1, Math.ceil((new Date(form.deadline) - new Date()) / (1000 * 60 * 60 * 24 * 30.44)));
+      requiredPerMonth = falta / months;
+    }
+
+    if (disponible <= 0) {
+      return { negative: true, disponible, fixedExp, debtPay, income };
+    }
+
+    const suggested = roundToThousand(disponible * 0.5);
+    return {
+      negative: false,
+      disponible,
+      fixedExp,
+      debtPay,
+      income,
+      suggested,
+      requiredPerMonth,
+      hasData: capacity.hasData,
+    };
+  })();
 
   if (loading) return (
     <div className="space-y-5 animate-fade-in">
@@ -209,6 +257,83 @@ export default function Goals() {
               <input type="date" className="input-field" value={form.deadline} onChange={(e) => setForm({ ...form, deadline: e.target.value })} />
             </div>
           </div>
+
+          {/* ── Calculadora de cuota recomendada ─────────────────────────── */}
+          <div className="rounded-2xl p-4 border border-surface-200 dark:border-slate-700/50 bg-surface-50 dark:bg-dark-850/40 space-y-3">
+            <div className="flex items-center gap-2">
+              <span className="text-base">🧮</span>
+              <p className="text-sm font-bold text-slate-900 dark:text-white">¿Cuánto puedo aportar al mes?</p>
+            </div>
+            <div>
+              <label className="input-label">Tu ingreso mensual estable</label>
+              <input
+                type="number"
+                min="0"
+                step="any"
+                className="input-field"
+                placeholder="Lo que ganas en un mes normal"
+                value={fixedIncome}
+                onChange={(e) => {
+                  setFixedIncome(e.target.value);
+                  localStorage.setItem('fixedIncome', e.target.value);
+                }}
+              />
+            </div>
+
+            {recommendation && recommendation.negative && (
+              <div className="rounded-xl p-3 text-xs border border-amber-500/30 bg-amber-500/5 text-amber-600 dark:text-amber-400 leading-relaxed">
+                Con un ingreso de {formatCurrency(recommendation.income, user?.currency)}, tus gastos fijos ({formatCurrency(recommendation.fixedExp, user?.currency)}) y pagos de deuda ({formatCurrency(recommendation.debtPay, user?.currency)}) ya consumen todo lo que entra. Antes de ahorrar, conviene revisar esos gastos o bajar la deuda — no hay margen para aportar sin ajustar primero.
+              </div>
+            )}
+
+            {recommendation && !recommendation.negative && (
+              <div className="space-y-2.5">
+                <div className="space-y-1 text-xs text-slate-500 dark:text-slate-400">
+                  <div className="flex justify-between"><span>Ingreso estable</span><span className="text-money">{formatCurrency(recommendation.income, user?.currency)}</span></div>
+                  <div className="flex justify-between"><span>− Gastos fijos</span><span className="text-money">{formatCurrency(recommendation.fixedExp, user?.currency)}</span></div>
+                  <div className="flex justify-between"><span>− Pagos de deuda</span><span className="text-money">{formatCurrency(recommendation.debtPay, user?.currency)}</span></div>
+                  <div className="flex justify-between font-semibold text-slate-700 dark:text-slate-200 pt-1 border-t border-surface-200 dark:border-slate-700/50">
+                    <span>= Te queda disponible</span><span className="text-money">{formatCurrency(recommendation.disponible, user?.currency)}</span>
+                  </div>
+                </div>
+
+                <div className="rounded-xl p-3" style={{ background: 'rgba(16,185,129,0.08)' }}>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">Cuota recomendada para esta meta</p>
+                  <p className="text-xl font-bold text-money" style={{ color: '#059669' }}>
+                    {formatCurrency(recommendation.suggested, user?.currency)} <span className="text-xs font-medium text-slate-400">/ mes</span>
+                  </p>
+                  <p className="text-[11px] text-slate-400 mt-1 leading-relaxed">
+                    Es la mitad de lo que te queda disponible. La otra mitad la dejamos para tus gastos del día a día e imprevistos.
+                  </p>
+                </div>
+
+                {recommendation.requiredPerMonth != null && (
+                  <div className="text-xs leading-relaxed">
+                    {recommendation.requiredPerMonth <= recommendation.suggested ? (
+                      <p className="text-primary-600 dark:text-primary-400">
+                        ✓ Para cumplir en la fecha que pusiste necesitas {formatCurrency(roundToThousand(recommendation.requiredPerMonth), user?.currency)}/mes — te alcanza de sobra con la cuota recomendada.
+                      </p>
+                    ) : recommendation.requiredPerMonth <= recommendation.disponible ? (
+                      <p className="text-amber-600 dark:text-amber-400">
+                        Para llegar a tiempo necesitarías {formatCurrency(roundToThousand(recommendation.requiredPerMonth), user?.currency)}/mes. Te alcanza, pero usarías más de la mitad de tu disponible.
+                      </p>
+                    ) : (
+                      <p className="text-red-500 dark:text-red-400">
+                        Para cumplir en esa fecha necesitarías {formatCurrency(roundToThousand(recommendation.requiredPerMonth), user?.currency)}/mes, más de lo que te queda disponible. Considera ampliar la fecha o bajar el monto objetivo.
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                {!recommendation.hasData && (
+                  <p className="text-[11px] text-slate-400 leading-relaxed">
+                    ℹ️ Aún no tienes gastos fijos ni deudas registradas, así que esto asume que todo tu ingreso está libre. Registra tus gastos fijos para una recomendación más precisa.
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
+
           <div>
             <label className="input-label" style={{ marginBottom: '0.5rem' }}>Ícono</label>
             <div className="flex flex-wrap gap-2">
