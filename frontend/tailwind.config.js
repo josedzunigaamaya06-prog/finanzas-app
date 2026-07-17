@@ -35,15 +35,30 @@ export default {
           200: '#e5e7eb',
           300: '#d1d5db',
         },
+        // Los tonos 600-800 de slate se usan como SUPERFICIES en modo oscuro
+        // (dark:bg-slate-800, dark:border-slate-700...). Por defecto son azul
+        // marino y chocaban con el sidebar neutro. Se neutralizan aquí en un solo
+        // punto en vez de tocar ~80 archivos. El resto de la escala slate
+        // (50-500, 900) queda intacta: es el texto de siempre.
+        slate: {
+          600: '#3a3f4d',
+          700: '#2b2f3b',
+          800: '#1c2029',
+        },
+        // Paleta oscura NEUTRA, de la misma familia que el sidebar (#111318).
+        // Antes era azul marino (#0f172a, #1e293b) y chocaba con el sidebar:
+        // se veían dos "negros" distintos pegados. Los escalones están separados
+        // a propósito para que las tarjetas resalten sobre el fondo:
+        //   fondo #0c0d11  <  sidebar #111318  <  tarjetas #1c2029
         dark: {
-          50:  '#f8fafc',
-          100: '#f1f5f9',
-          200: '#e2e8f0',
-          700: '#334155',
-          800: '#1e293b',
-          850: '#172032',
-          900: '#0f172a',
-          950: '#080e1a',
+          50:  '#f6f7f9',
+          100: '#e8eaee',
+          200: '#c7cad3',
+          700: '#2b2f3b', // bordes y divisores (sólidos y visibles)
+          800: '#1c2029', // tarjetas, header, modales
+          850: '#13151b', // inputs y superficies hundidas
+          900: '#0c0d11', // fondo de la app
+          950: '#07080a',
         },
       },
       fontFamily: {

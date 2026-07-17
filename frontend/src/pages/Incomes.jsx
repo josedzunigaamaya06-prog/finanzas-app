@@ -166,7 +166,7 @@ export default function Incomes() {
                       <td className="px-4 py-3">
                         <p className="text-sm font-medium text-slate-900 dark:text-white">{income.description}</p>
                       </td>
-                      <td className="px-4 py-3 text-xs text-slate-500">
+                      <td className="px-4 py-3 text-xs text-slate-500 dark:text-slate-400">
                         {income.category?.icon} {income.category?.name || '-'}
                       </td>
                       <td className="px-4 py-3 text-xs text-slate-400">{formatDate(income.date)}</td>

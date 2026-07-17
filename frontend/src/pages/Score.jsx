@@ -141,7 +141,7 @@ export default function Score() {
           ].map((s) => (
             <div key={s.lbl} className="flex items-center gap-1">
               <span className={`w-2 h-2 rounded-full ${s.c}`}/>
-              <span className="text-xs text-slate-400">{s.lbl} <span className="text-slate-500">({s.range})</span></span>
+              <span className="text-xs text-slate-400">{s.lbl} <span className="text-slate-500 dark:text-slate-400">({s.range})</span></span>
             </div>
           ))}
         </div>

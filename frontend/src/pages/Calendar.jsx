@@ -377,7 +377,7 @@ export default function Calendar() {
             {pending.length === 0 ? (
               <div className="bg-white dark:bg-dark-800 rounded-2xl border border-slate-100 dark:border-slate-700/50 p-6 text-center">
                 <p className="text-2xl mb-1">🎉</p>
-                <p className="text-sm text-slate-500">¡Sin pagos pendientes este mes!</p>
+                <p className="text-sm text-slate-500 dark:text-slate-400">¡Sin pagos pendientes este mes!</p>
               </div>
             ) : (
               <div className="space-y-2">

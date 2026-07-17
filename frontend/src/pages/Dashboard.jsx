@@ -222,7 +222,7 @@ export default function Dashboard() {
                   <div className="h-full bg-primary-500 transition-all" style={{ width: `${paymentMethodStats.income.digitalPct || 0}%` }} />
                   <div className="h-full bg-emerald-500 transition-all" style={{ width: `${paymentMethodStats.income.cashPct || 0}%` }} />
                 </div>
-                <div className="flex justify-between text-xs mt-1 text-slate-500">
+                <div className="flex justify-between text-xs mt-1 text-slate-500 dark:text-slate-400">
                   <span>📱 {formatCurrency(paymentMethodStats.income.digital, user?.currency)}</span>
                   <span>💵 {formatCurrency(paymentMethodStats.income.cash, user?.currency)}</span>
                 </div>
@@ -240,7 +240,7 @@ export default function Dashboard() {
                   <div className="h-full bg-primary-500 transition-all" style={{ width: `${paymentMethodStats.expenses.digitalPct || 0}%` }} />
                   <div className="h-full bg-red-500 transition-all" style={{ width: `${paymentMethodStats.expenses.cashPct || 0}%` }} />
                 </div>
-                <div className="flex justify-between text-xs mt-1 text-slate-500">
+                <div className="flex justify-between text-xs mt-1 text-slate-500 dark:text-slate-400">
                   <span>📱 {formatCurrency(paymentMethodStats.expenses.digital, user?.currency)}</span>
                   <span>💵 {formatCurrency(paymentMethodStats.expenses.cash, user?.currency)}</span>
                 </div>
