@@ -1,4 +1,5 @@
-import { NavLink } from 'react-router-dom';
+import { useRef, useLayoutEffect } from 'react';
+import { NavLink, useLocation } from 'react-router-dom';
 
 // Íconos de línea consistentes (usan currentColor para heredar el estado activo)
 const IconHome = () => (
@@ -43,18 +44,68 @@ const items = [
   { to: '/debts',     Icon: IconBank,     label: 'Deudas' },
 ];
 
+// Padding interno de la cápsula (px). La píldora se ajusta a él por arriba y abajo.
+const PAD = 6;
+
+// Curva con leve rebote al final: es lo que da la sensación "spring" de iOS.
+const EASE = 'cubic-bezier(0.34, 1.4, 0.64, 1)';
+const TRANSITION = `transform 450ms ${EASE}, width 450ms ${EASE}, opacity 250ms ease`;
+
 export default function BottomNav() {
+  const { pathname } = useLocation();
+  const itemRefs = useRef([]);
+  const pillRef = useRef(null);
+  const positioned = useRef(false);
+
+  const activeIndex = items.findIndex((i) => pathname.startsWith(i.to));
+
+  // La píldora se posiciona midiendo el ítem activo y se anima por estilo directo.
+  // Se hace de forma imperativa (no por estado de React) porque el estado no
+  // garantiza el orden entre "colocar sin animar" y "habilitar la animación",
+  // y la píldora terminaba saltando en vez de deslizarse.
+  useLayoutEffect(() => {
+    const pill = pillRef.current;
+    if (!pill) return;
+
+    const place = () => {
+      const el = itemRefs.current[activeIndex];
+      // Ruta fuera del nav (perfil, metas…): se oculta sin mover nada.
+      if (!el) {
+        pill.style.opacity = '0';
+        return;
+      }
+
+      // La primera colocación va sin transición; si no, al abrir la app la
+      // píldora entraría deslizándose desde el borde izquierdo.
+      if (!positioned.current) pill.style.transition = 'none';
+
+      pill.style.transform = `translate3d(${el.offsetLeft}px, 0, 0)`;
+      pill.style.width = `${el.offsetWidth}px`;
+      pill.style.opacity = '1';
+
+      if (!positioned.current) {
+        void pill.offsetWidth; // fuerza el reflow antes de habilitar la animación
+        pill.style.transition = TRANSITION;
+        positioned.current = true;
+      }
+    };
+
+    place();
+    window.addEventListener('resize', place);
+    return () => window.removeEventListener('resize', place);
+  }, [activeIndex]);
+
   return (
     // Cápsula flotante: no toca los bordes y se apoya sobre el área segura del iPhone.
-    // El <nav> no captura toques (pointer-events-none) para no bloquear el contenido
-    // que queda a los lados de la píldora; solo la píldora es interactiva.
+    // El <nav> no captura toques para no bloquear el contenido a los lados de la píldora.
     <nav
       className="md:hidden fixed left-0 right-0 z-40 flex justify-center px-4 pointer-events-none"
       style={{ bottom: 'calc(0.625rem + env(safe-area-inset-bottom, 0px))' }}
     >
       <div
-        className="pointer-events-auto flex items-center w-full max-w-md p-1.5 rounded-full"
+        className="pointer-events-auto relative flex items-center w-full max-w-md rounded-full"
         style={{
+          padding: PAD,
           background: 'rgba(22, 24, 30, 0.78)',
           backdropFilter: 'blur(24px) saturate(180%)',
           WebkitBackdropFilter: 'blur(24px) saturate(180%)',
@@ -62,26 +113,33 @@ export default function BottomNav() {
           boxShadow: '0 10px 40px rgba(0,0,0,0.45), 0 2px 10px rgba(0,0,0,0.3)',
         }}
       >
-        {items.map(({ to, Icon, label }) => (
+        {/* Píldora ÚNICA que se desliza hasta el ítem activo */}
+        <span
+          ref={pillRef}
+          aria-hidden
+          className="absolute rounded-full"
+          style={{
+            left: 0,
+            top: PAD,
+            bottom: PAD,
+            width: 0,
+            opacity: 0,
+            background: 'rgba(255,255,255,0.10)',
+            transition: TRANSITION,
+          }}
+        />
+
+        {items.map(({ to, Icon, label }, i) => (
           <NavLink
             key={to}
             to={to}
-            className="relative flex flex-col items-center justify-center gap-1 flex-1 min-w-0 py-2 rounded-full transition-transform duration-150 active:scale-90"
+            ref={(el) => (itemRefs.current[i] = el)}
+            className="relative z-10 flex flex-col items-center justify-center gap-1 flex-1 min-w-0 py-2 rounded-full transition-transform duration-150 active:scale-90"
           >
             {({ isActive }) => (
               <>
-                {/* Píldora del ítem activo: crece y aparece con transición */}
                 <span
-                  aria-hidden
-                  className="absolute inset-0 rounded-full transition-all duration-300 ease-out"
-                  style={{
-                    background: 'rgba(255,255,255,0.10)',
-                    opacity: isActive ? 1 : 0,
-                    transform: isActive ? 'scale(1)' : 'scale(0.75)',
-                  }}
-                />
-                <span
-                  className="relative flex items-center justify-center transition-all duration-300 ease-out"
+                  className="flex items-center justify-center transition-all duration-300 ease-out"
                   style={{
                     color: isActive ? '#34d399' : '#d1d5db',
                     transform: isActive ? 'translateY(-1px)' : 'none',
@@ -90,7 +148,7 @@ export default function BottomNav() {
                   <Icon />
                 </span>
                 <span
-                  className="relative text-[9px] font-semibold tracking-wide truncate max-w-full px-0.5 transition-colors duration-300"
+                  className="text-[9px] font-semibold tracking-wide truncate max-w-full px-0.5 transition-colors duration-300"
                   style={{ color: isActive ? '#34d399' : '#9ca3af' }}
                 >
                   {label}
